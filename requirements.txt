@@ -5,7 +5,9 @@ cloudinary
 pymongo 
 bson
 firebase_admin
+opencv-python
 gunicorn
+
 
 
 
