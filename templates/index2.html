@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Farmer's Market - Attractive Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+
+    <style>
+        :root {
+            --primary: #16A085;
+            --primary-dark: #117A65;
+            --secondary: #2980b9;
+            --danger: #e74c3c;
+            --danger-dark: #c0392b;
+            --text-dark: #333;
+            --text-light: #777;
+            --bg-light: #f4f7f6;
+            --white: #fff;
+            --radius: 16px;
+            --shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
+            --shadow-hover: 0 14px 28px rgba(0, 0, 0, 0.1);
+        }
+
+        /* --- Global & Animation Keyframes --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        body { background: var(--bg-light); color: var(--text-dark); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
+        
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes cartBounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        /* NEW: Toast animation */
+        @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes toastOut { to { transform: translateX(100%); opacity: 0; } }
+
+        /* --- Header --- */
+        header { 
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark)); 
+            padding: 20px 40px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            color: var(--white); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+            position: sticky; top: 0; z-index: 1000;
+            animation: fadeInDown 0.6s ease-out;
+        }
+        header h1 { font-size: 28px; }
+        .nav-links { display: flex; align-items: center; gap: 15px; }
+        .nav-button { 
+            padding: 10px 20px; 
+            background: rgba(255, 255, 255, 0.9); 
+            color: var(--primary-dark); 
+            border: none; 
+            border-radius: var(--radius); 
+            font-weight: 600; cursor: pointer; 
+            transition: all 0.3s ease; 
+            text-decoration: none; 
+            display: flex; align-items: center; gap: 8px; 
+        }
+        .nav-button:hover { background: var(--white); color: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .nav-button .count { background-color: var(--danger); color: white; border-radius: 50%; padding: 2px 8px; font-size: 12px; font-weight: bold; margin-left: 5px; }
+        .nav-button.bouncing { animation: cartBounce 0.5s ease; }
+        
+        /* NEW: Hamburger Menu for Buyer Page */
+        .menu-toggle-buyer {
+            display: none;
+            font-size: 1.8rem;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            z-index: 1002;
+        }
+
+        /* --- Filter Controls --- */
+        .filter-controls {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px 40px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            animation: fadeInDown 0.7s ease-out;
+        }
+        .search-bars { display: flex; gap: 20px; flex-wrap: wrap; }
+        .search-input {
+            flex-grow: 1; padding: 15px 20px; border: 1px solid #ddd;
+            border-radius: var(--radius); font-size: 16px; transition: all 0.3s ease; min-width: 250px;
+        }
+        .search-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.2); }
+        .category-filters { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+        .category-btn {
+            padding: 10px 25px; border: 2px solid transparent; background-color: var(--white);
+            color: var(--text-dark); border-radius: var(--radius); font-weight: 600;
+            cursor: pointer; transition: all 0.3s ease; font-size: 16px; box-shadow: var(--shadow);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .category-btn:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); color: var(--primary-dark); }
+        .category-btn.active { background-color: var(--primary); color: var(--white); border-color: var(--primary-dark); }
+
+        /* --- Product Grid --- */
+       .product-list { 
+            padding: 20px 40px 40px; display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(280px, 350px));
+            justify-content: center; gap: 30px;
+       }
+        .product-card { 
+            background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); 
+            overflow: hidden; display: flex; flex-direction: column; 
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            opacity: 0; /* Initially hidden for animation */
+            animation: fadeInUp 0.5s ease-out forwards;
+            position: relative; /* For wishlist button positioning */
+        }
+        .product-card:hover { transform: translateY(-8px); box-shadow: var(--shadow-hover); }
+        .product-card:hover .product-img-container img { transform: scale(1.05); }
+        .product-img-container { width: 100%; height: 200px; overflow: hidden; }
+        .product-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
+        .product-info { padding: 20px; text-align: center; flex-grow: 1; display: flex; flex-direction: column; }
+        .product-card h3 { margin: 0 0 8px; font-size: 20px; }
+        .product-card .price { color: var(--primary-dark); font-size: 18px; font-weight: bold; margin: 10px 0; }
+        .product-actions { margin-top: auto; display: flex; gap: 10px; padding-top: 15px; }
+        .action-button { flex: 1; border: none; padding: 12px; border-radius: 12px; font-weight: 500; cursor: pointer; transition: all 0.3s ease; font-size: 14px; }
+        .action-button:active { transform: scale(0.95); }
+        .add-to-cart-btn { background: var(--primary); color: var(--white); }
+        .add-to-cart-btn:hover { background: var(--primary-dark); }
+        .details-btn { background: #ecf0f1; color: var(--text-dark); }
+        .details-btn:hover { background: #dde2e3; }
+        /* NEW: Wishlist Button on card */
+        .wishlist-btn {
+            position: absolute; top: 15px; right: 15px; background: rgba(255, 255, 255, 0.8);
+            border: none; border-radius: 50%; width: 40px; height: 40px;
+            font-size: 18px; color: var(--text-dark); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s ease; backdrop-filter: blur(5px);
+        }
+        .wishlist-btn:hover { background: var(--white); transform: scale(1.1); }
+        .wishlist-btn .fas { color: var(--danger); display: none; }
+        .wishlist-btn.active .far { display: none; }
+        .wishlist-btn.active .fas { display: inline-block; animation: cartBounce 0.4s ease-out; }
+
+        /* --- Modals and Panels (General) --- */
+        .modal-overlay, .cart-panel { transition: all 0.5s cubic-bezier(0.77, 0, 0.175, 1); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 2000; opacity: 0; visibility: hidden; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content { background: var(--white); padding: 30px; border-radius: var(--radius); box-shadow: var(--shadow-hover); width: 90%; max-width: 500px; text-align: center; transform: scale(0.9) translateY(20px); transition: transform 0.4s ease; }
+        .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+        .modal-content img { width: 100%; height: 250px; object-fit: cover; border-radius: var(--radius); margin-bottom: 20px; }
+        .modal-content h2 { margin-bottom: 10px; color: var(--primary-dark); }
+        .modal-content p { color: var(--text-light); margin-bottom: 15px; }
+        .modal-close-btn { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.2); border: none; font-size: 20px; color: white; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+        .modal-close-btn:hover { background: rgba(0,0,0,0.5); transform: rotate(90deg); }
+
+        /* NEW: Wishlist Modal */
+        .wishlist-modal-content { max-height: 80vh; display: flex; flex-direction: column; }
+        .wishlist-items { overflow-y: auto; padding-right: 15px; margin: 0 -15px; } /* For custom scrollbar */
+        .wishlist-item { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #eee; }
+        .wishlist-item img { width: 80px; height: 80px; border-radius: var(--radius); margin-right: 15px; object-fit: cover;}
+        .wishlist-item-info { text-align: left; flex-grow: 1; }
+        .wishlist-item-info h4 { margin-bottom: 5px; }
+        .wishlist-item-actions { display: flex; flex-direction: column; gap: 8px; }
+        .wishlist-item-actions .action-button { padding: 8px 12px; font-size: 12px; }
+
+        /* Cart Panel */
+        .cart-panel { position: fixed; top: 0; right: -100%; width: 100%; max-width: 400px; height: 100%; background: var(--white); box-shadow: -10px 0 30px rgba(0,0,0,0.1); z-index: 3000; display: flex; flex-direction: column; }
+        .cart-panel.active { right: 0; }
+        .cart-header { padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; }
+        .cart-header h2 { font-size: 22px; }
+        .cart-close-btn { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-light); transition: transform 0.3s; }
+        .cart-close-btn:hover { transform: rotate(90deg); }
+        .cart-items { flex-grow: 1; overflow-y: auto; padding: 10px 20px; }
+        .cart-item { display: flex; align-items: center; padding: 20px 0; border-bottom: 1px solid #f0f0f0; }
+        .cart-item:last-child { border-bottom: none; }
+        .cart-item img { width: 70px; height: 70px; border-radius: 12px; object-fit: cover; margin-right: 15px; }
+        .cart-item-info { flex-grow: 1; }
+        .cart-item-info h4 { font-size: 16px; margin-bottom: 5px; }
+        .cart-item-info .price { color: var(--primary); font-weight: 600; }
+        .quantity-control { display: flex; align-items: center; border: 1px solid #ddd; border-radius: 8px; margin-left: auto;}
+        .quantity-control button { background: none; border: none; font-size: 18px; cursor: pointer; padding: 5px 10px; color: var(--text-dark); }
+        .remove-item-btn { background: none; border: none; color: var(--danger); font-size: 18px; cursor: pointer; margin-left: 20px; transition: color 0.3s; }
+        .remove-item-btn:hover { color: var(--danger-dark); }
+        .cart-footer { padding: 20px; border-top: 1px solid #eee; background: #f8f9fa; }
+        .cart-total { display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; margin-bottom: 20px; }
+        .checkout-btn { width: 100%; padding: 15px; background: var(--primary); color: var(--white); border: none; border-radius: 12px; font-size: 18px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+        .checkout-btn:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .empty-cart-message, .loading-container, .error-text, .no-results-message { text-align: center; padding: 50px 20px; color: var(--text-light); width: 100%; grid-column: 1 / -1;}
+        .empty-cart-message i, .no-results-message i { font-size: 48px; margin-bottom: 15px; color: #bdc3c7; }
+        .loader { width: 50px; height: 50px; border: 5px solid #f3f3f3; border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
+
+        /* --- Checkout Modal --- */
+        .checkout-modal-content{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow-hover);width:90%;max-width:600px;transform:scale(.9);transition:transform .4s ease;overflow:hidden}.modal-overlay.active .checkout-modal-content{transform:scale(1)}.checkout-header{background:var(--primary);color:var(--white);padding:20px;text-align:center;position:relative}.checkout-modal-close-btn{position:absolute;top:50%;right:20px;transform:translateY(-50%);background:none;border:none;color:var(--white);font-size:24px;cursor:pointer;opacity:.8;transition:all .3s}.checkout-modal-close-btn:hover{opacity:1;transform:translateY(-50%) rotate(90deg)}.checkout-body{padding:30px}.checkout-step{display:none;animation:fadeInUp .5s ease-out}.checkout-step.active-step{display:block}.form-group{margin-bottom:20px;text-align:left}.form-group label{display:block;margin-bottom:8px;font-weight:500}.form-group input{width:100%;padding:12px 15px;border:1px solid #ccc;border-radius:8px;font-size:16px;transition:all .3s ease}.form-group input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(39,174,96,.2)}.checkout-button{width:100%;padding:15px;background:var(--secondary);color:var(--white);border:none;border-radius:12px;font-size:18px;font-weight:600;cursor:pointer;transition:all .3s ease;margin-top:10px}.checkout-button:hover{background:#20638f;transform:translateY(-2px);box-shadow:0 4px 10px rgba(0,0,0,.1)}.payment-options{display:grid;gap:15px}.payment-option input[type=radio]{display:none}.payment-option label{display:flex;align-items:center;padding:20px;border:2px solid #ddd;border-radius:var(--radius);cursor:pointer;transition:all .3s ease}.payment-option label i{font-size:24px;margin-right:15px;width:30px;text-align:center;color:var(--text-light)}.payment-option input:checked+label{border-color:var(--primary);background-color:#f5fbfd;box-shadow:0 4px 12px rgba(0,0,0,.08)}.payment-option input:checked+label i{color:var(--primary)}.confirmation-step{text-align:center;padding:40px 20px}.confirmation-step .fa-check-circle{font-size:80px;color:var(--primary);margin-bottom:20px;animation:cartBounce .8s ease-out}.confirmation-step h3{font-size:24px;margin-bottom:10px}
+
+        /* NEW: Toast Notification Container */
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            background-color: var(--text-dark);
+            color: var(--white);
+            padding: 15px 25px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-hover);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: toastIn 0.5s ease, toastOut 0.5s ease 3s forwards;
+        }
+        .toast.success { background-color: var(--primary); }
+        .toast.error { background-color: var(--danger); }
+        
+        /* NEW: Responsive Styles for Buyer Page */
+        @media (max-width: 768px) {
+            header {
+                padding: 15px 20px;
+            }
+            header h1 {
+                font-size: 22px;
+            }
+            .menu-toggle-buyer {
+                display: block; /* Show hamburger */
+            }
+            .nav-links {
+                position: absolute;
+                top: 100%; /* Position below header */
+                right: 0;
+                background: var(--primary-dark);
+                flex-direction: column;
+                width: 250px;
+                padding: 10px 0;
+                box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+                border-bottom-left-radius: var(--radius);
+                transform: translateX(100%);
+                transition: transform 0.3s ease-in-out;
+            }
+            .nav-links.active {
+                transform: translateX(0);
+            }
+            .nav-links .nav-button {
+                width: 100%;
+                justify-content: flex-start;
+                padding: 15px 25px;
+                background: transparent;
+                color: white;
+                border-radius: 0;
+            }
+             .nav-links .nav-button:hover {
+                background: var(--primary);
+                transform: none;
+            }
+            .filter-controls, .product-list {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+            .search-input { min-width: 100%; }
+            .category-btn { font-size: 14px; padding: 8px 15px; }
+            .product-list {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+        }
+        
+    </style>
+</head>
+
+<body>
+  <header>
+    <h1><i class="fas fa-store"></i> Farmer's Market</h1>
+    <div class="nav-links" id="nav-links">
+      <a href="/" class="nav-button"> <i class="fas fa-arrow-left"></i> Back</a>
+      <button id="wishlist-button" class="nav-button">
+          <i class="fas fa-heart"></i> Wishlist
+          <span id="wishlist-count" class="count">0</span>
+      </button>
+      <button id="cart-button" class="nav-button">
+        <i class="fas fa-shopping-cart"></i> View Cart
+        <span id="cart-count" class="count">0</span>
+      </button>
+    </div>
+    <button class="menu-toggle-buyer" id="menu-toggle-buyer">
+        <i class="fas fa-bars"></i>
+    </button>
+  </header>
+
+  <main>
+    <div class="filter-controls">
+        <div class="search-bars">
+            <input type="text" id="product-search" class="search-input" placeholder="🔍 Search for products...">
+            <input type="text" id="location-search" class="search-input" placeholder="📍 Search by location...">
+        </div>
+        <div id="category-filters" class="category-filters">
+             <button class="category-btn active" data-category="all"><i class="fas fa-star"></i> All</button>
+             <button class="category-btn" data-category="fruits"><i class="fas fa-apple-alt"></i> Fruits</button>
+             <button class="category-btn" data-category="vegetables"><i class="fas fa-carrot"></i> Vegetables</button>
+        </div>
+    </div>
+    <div id="product-list" class="product-list"></div>
+  </main>
+
+  <div id="toast-container"></div>
+
+  <div id="details-modal" class="modal-overlay">
+      <div class="modal-content">
+          <button id="modal-close-btn" class="modal-close-btn"><i class="fas fa-times"></i></button>
+          <img id="modal-img" src="" alt="Product Image">
+          <h2 id="modal-title">Product Name</h2>
+          <p id="modal-price" class="price">₹0 / kg</p>
+          <p id="modal-description"></p>
+          <p><strong>Seller:</strong> <span id="modal-seller"></span></p>
+          <p><strong>Location:</strong> <span id="modal-location"></span></p>
+      </div>
+  </div>
+
+  <div id="wishlist-modal" class="modal-overlay">
+      <div class="modal-content wishlist-modal-content">
+          <button id="wishlist-close-btn" class="modal-close-btn"><i class="fas fa-times"></i></button>
+          <h2 style="margin-bottom: 20px;"><i class="fas fa-heart"></i> Your Wishlist</h2>
+          <div id="wishlist-items" class="wishlist-items">
+              </div>
+      </div>
+  </div>
+
+  <div id="cart-panel" class="cart-panel">
+    <div class="cart-header">
+      <h2><i class="fas fa-shopping-cart"></i> Your Cart</h2>
+      <button id="cart-close-btn" class="cart-close-btn"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="cart-items" class="cart-items"></div>
+    <div id="cart-footer" class="cart-footer">
+        <div class="cart-total">
+            <span>Total:</span>
+            <span id="cart-total-price">₹0.00</span>
+        </div>
+        <button class="checkout-btn"><i class="fas fa-credit-card"></i> Proceed to Checkout</button>
+    </div>
+  </div>
+
+  <div id="checkout-modal" class="modal-overlay">
+      <div class="checkout-modal-content">
+          <div class="checkout-header">
+              <h2 id="checkout-title">Checkout</h2>
+              <button id="checkout-modal-close-btn" class="checkout-modal-close-btn"><i class="fas fa-times"></i></button>
+          </div>
+          <div class="checkout-body">
+              <div id="address-step" class="checkout-step active-step">
+                  <h4><i class="fas fa-map-marker-alt"></i> Enter Your Delivery Address</h4>
+                  <form id="address-form" style="margin-top: 20px;">
+                      <div class="form-group"><label for="fullName">Full Name</label><input type="text" id="fullName" required></div>
+                      <div class="form-group"><label for="phone">Phone Number</label><input type="tel" id="phone" required></div>
+                      <div class="form-group"><label for="address">Address</label><input type="text" id="address" required></div>
+                      <div class="form-group"><label for="city">City</label><input type="text" id="city" required></div>
+                      <div class="form-group"><label for="pincode">Pincode</label><input type="text" id="pincode" required></div>
+                      <button type="submit" class="checkout-button">Save & Continue</button>
+                  </form>
+              </div>
+              <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+              <div id="payment-step" class="checkout-step">
+                  <h4><i class="fas fa-credit-card"></i> Choose Payment Method</h4>
+                  <div id="payment-options-container">
+                      <div class="payment-options" style="margin-top: 20px;">
+                          <div class="payment-option">
+                              <input type="radio" id="cod" name="payment" value="cod" checked>
+                              <label for="cod"><i class="fas fa-hand-holding-usd"></i>Cash on Delivery</label>
+                          </div>
+                          <div class="payment-option">
+                              <input type="radio" id="upi" name="payment" value="upi">
+                              <label for="upi"><i class="fab fa-google-pay"></i>UPI (GPay, PhonePe, etc.)</label>
+                          </div>
+                      </div>
+                      <button id="place-order-btn" class="checkout-button">Place Order / Proceed</button>
+                  </div>
+                  <div id="upi-qr-display" style="display: none; text-align: center; margin-top: 20px;">
+                      <h5>Scan QR to Pay with any UPI App</h5>
+                      <div id="qrcode" style="display: flex; justify-content: center; margin: 20px 0;"></div>
+                      <p style="font-weight: bold; font-size: 20px; color: #1e8449;" id="upi-amount"></p>
+                      <button id="confirm-payment-btn" class="checkout-button" style="margin-top: 20px; background-color: #27ae60;">I Have Paid</button>
+                  </div>
+              </div>
+              <div id="confirmation-step" class="checkout-step">
+                  <i class="fas fa-check-circle"></i>
+                  <h3>Order Placed Successfully!</h3>
+                  <p>Thank you for your purchase. Your fresh produce is on its way!</p>
+                  <button id="close-confirmation-btn" class="checkout-button" style="margin-top: 20px;">Close</button>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <script>
+    // --- STATE MANAGEMENT ---
+    let cart = [];
+    let wishlist = []; // NEW: Wishlist state
+    let allProducts = [];
+    let activeCategory = 'all';
+
+    // --- DOM ELEMENTS ---
+    const productContainer = document.getElementById("product-list");
+    const productSearchInput = document.getElementById('product-search');
+    const locationSearchInput = document.getElementById('location-search');
+    const categoryFiltersContainer = document.getElementById('category-filters');
+    const cartButton = document.getElementById('cart-button');
+    const cartCount = document.getElementById('cart-count');
+    const cartPanel = document.getElementById('cart-panel');
+    const cartCloseBtn = document.getElementById('cart-close-btn');
+    const cartItemsContainer = document.getElementById('cart-items');
+    const cartTotalPriceEl = document.getElementById('cart-total-price');
+    const cartFooter = document.getElementById('cart-footer');
+    const detailsModal = document.getElementById('details-modal');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+    // NEW: Wishlist DOM Elements
+    const wishlistModal = document.getElementById('wishlist-modal');
+    const wishlistButton = document.getElementById('wishlist-button');
+    const wishlistCount = document.getElementById('wishlist-count');
+    const wishlistItemsContainer = document.getElementById('wishlist-items');
+    const wishlistCloseBtn = document.getElementById('wishlist-close-btn');
+    // NEW: Toast container
+    const toastContainer = document.getElementById('toast-container');
+    // NEW: Mobile menu for buyer page
+    const menuToggleBuyer = document.getElementById('menu-toggle-buyer');
+    const navLinks = document.getElementById('nav-links');
+    // Existing Checkout DOM Elements...
+    const checkoutModal=document.getElementById("checkout-modal"),checkoutModalCloseBtn=document.getElementById("checkout-modal-close-btn"),checkoutTitle=document.getElementById("checkout-title"),addressStep=document.getElementById("address-step"),paymentStep=document.getElementById("payment-step"),confirmationStep=document.getElementById("confirmation-step"),addressForm=document.getElementById("address-form"),placeOrderBtn=document.getElementById("place-order-btn"),closeConfirmationBtn=document.getElementById("close-confirmation-btn"),paymentOptionsContainer=document.getElementById("payment-options-container"),upiQrDisplay=document.getElementById("upi-qr-display"),qrCodeContainer=document.getElementById("qrcode"),upiAmountEl=document.getElementById("upi-amount"),confirmPaymentBtn=document.getElementById("confirm-payment-btn");
+
+    // --- NEW: LOCAL STORAGE & STATE SYNC ---
+    function saveStateToLocalStorage() {
+        localStorage.setItem('farmerCart', JSON.stringify(cart));
+        localStorage.setItem('farmerWishlist', JSON.stringify(wishlist));
+    }
+
+    function loadStateFromLocalStorage() {
+        const savedCart = localStorage.getItem('farmerCart');
+        const savedWishlist = localStorage.getItem('farmerWishlist');
+        if (savedCart) cart = JSON.parse(savedCart);
+        if (savedWishlist) wishlist = JSON.parse(savedWishlist);
+    }
+    
+    // --- NEW: TOAST NOTIFICATION ---
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        const icon = type === 'success' ? 'fa-check-circle' : 'fa-heart';
+        toast.innerHTML = `<i class="fas ${icon}"></i> ${message}`;
+        toastContainer.appendChild(toast);
+        setTimeout(() => {
+            toast.remove();
+        }, 3500);
+    }
+
+    // --- API & RENDERING ---
+    async function fetchAndRenderProducts() {
+        productContainer.innerHTML = `<div class="loading-container"><div class="loader"></div></div>`;
+        try {
+            const response = await fetch('/get-items'); // This is YOUR backend endpoint
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            
+            const products = await response.json();
+            allProducts = products;
+            filterAndRenderProducts();
+        } catch (error) {
+            console.error("Failed to fetch products:", error);
+            productContainer.innerHTML = `<p class="error-text">Sorry, we couldn't load the products. Please try again later.</p>`;
+        }
+    }
+
+    function filterAndRenderProducts() {
+        let filteredProducts = [...allProducts];
+        const productSearchTerm = productSearchInput.value.trim().toLowerCase();
+        const locationSearchTerm = locationSearchInput.value.trim().toLowerCase();
+        if (activeCategory !== 'all') {
+            filteredProducts = filteredProducts.filter(p => p.category && p.category.toLowerCase() === activeCategory);
+        }
+        if (productSearchTerm) {
+            filteredProducts = filteredProducts.filter(p => p.itemName.toLowerCase().includes(productSearchTerm));
+        }
+        if (locationSearchTerm) {
+            filteredProducts = filteredProducts.filter(p => p.sellerLocation && p.sellerLocation.toLowerCase().includes(locationSearchTerm));
+        }
+        renderProducts(filteredProducts);
+    }
+
+    function renderProducts(products) {
+        productContainer.innerHTML = '';
+        if (products.length === 0) {
+            productContainer.innerHTML = `<div class="no-results-message"><i class="fas fa-search"></i><p>No products found.</p><span>Try adjusting your search or filters.</span></div>`;
+            return;
+        }
+
+        products.forEach((product, index) => {
+            const card = document.createElement('div');
+            card.className = 'product-card';
+            card.style.animationDelay = `${index * 50}ms`;
+            const isInWishlist = wishlist.some(item => item.id === product.id);
+
+            card.innerHTML = `
+                <div class="product-img-container">
+                    <img src="${product.itemImageUrl}" alt="${product.itemName}" />
+                </div>
+                <button class="wishlist-btn ${isInWishlist ? 'active' : ''}" data-product-id="${product.id}">
+                    <i class="far fa-heart"></i><i class="fas fa-heart"></i>
+                </button>
+                <div class="product-info">
+                    <h3>${product.itemName}</h3>
+                    <p class="price">₹${product.itemPrice} / kg</p>
+                    <p style="font-size: 14px; color: #777;"><i class="fas fa-map-marker-alt"></i> ${product.sellerLocation || 'N/A'}</p>
+                    <div class="product-actions">
+                        <button class="action-button details-btn"><i class="fas fa-info-circle"></i> Details</button>
+                        <button class="action-button add-to-cart-btn"><i class="fas fa-cart-plus"></i> Add to Cart</button>
+                    </div>
+                </div>`;
+
+            card.querySelector('.add-to-cart-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                addToCart(product);
+            });
+            card.querySelector('.details-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                showProductDetails(product);
+            });
+            // NEW Wishlist button listener
+            card.querySelector('.wishlist-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleWishlist(product, e.currentTarget);
+            });
+
+            productContainer.appendChild(card);
+        });
+    }
+
+    // --- CART LOGIC ---
+    function addToCart(product) {
+        const existingItem = cart.find(item => item.id === product.id);
+        if (existingItem) {
+            existingItem.quantity++;
+        } else {
+            cart.push({ ...product, quantity: 1 });
+        }
+        showToast(`${product.itemName} added to cart!`, 'success');
+        updateCart();
+        cartButton.classList.add('bouncing');
+        setTimeout(() => cartButton.classList.remove('bouncing'), 500);
+    }
+    
+    function updateCart() {
+        renderCartItems();
+        updateCartTotal();
+        updateCartIcon();
+        saveStateToLocalStorage();
+    }
+    
+    function renderCartItems() {
+        if (cart.length === 0) {
+            cartItemsContainer.innerHTML = `<div class="empty-cart-message"><i class="fas fa-shopping-basket"></i><p>Your cart is empty.</p></div>`;
+            cartFooter.style.display = 'none';
+        } else {
+            cartFooter.style.display = 'block';
+            cartItemsContainer.innerHTML = '';
+            cart.forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'cart-item';
+                itemEl.innerHTML = `
+                    <img src="${item.itemImageUrl}" alt="${item.itemName}">
+                    <div class="cart-item-info">
+                        <h4>${item.itemName}</h4>
+                        <span class="price">₹${item.itemPrice} x ${item.quantity} = ₹${(item.itemPrice * item.quantity).toFixed(2)}</span>
+                    </div>
+                    <div class="quantity-control">
+                        <button class="quantity-minus" data-id="${item.id}">-</button>
+                        <span>${item.quantity}</span>
+                        <button class="quantity-plus" data-id="${item.id}">+</button>
+                    </div>
+                    <button class="remove-item-btn" data-id="${item.id}"><i class="fas fa-trash-alt"></i></button>`;
+                cartItemsContainer.appendChild(itemEl);
+            });
+            cartItemsContainer.querySelectorAll('.quantity-minus').forEach(btn => btn.addEventListener('click', () => changeQuantity(btn.dataset.id, -1)));
+            cartItemsContainer.querySelectorAll('.quantity-plus').forEach(btn => btn.addEventListener('click', () => changeQuantity(btn.dataset.id, 1)));
+            cartItemsContainer.querySelectorAll('.remove-item-btn').forEach(btn => btn.addEventListener('click', () => removeFromCart(btn.dataset.id)));
+        }
+    }
+    
+    function changeQuantity(productId, amount) {
+        const item = cart.find(i => i.id == productId);
+        if (item) {
+            item.quantity += amount;
+            if (item.quantity <= 0) removeFromCart(productId);
+            else updateCart();
+        }
+    }
+
+    function removeFromCart(productId) {
+        cart = cart.filter(i => i.id != productId);
+        updateCart();
+    }
+
+    function updateCartTotal() {
+        const total = cart.reduce((sum, item) => sum + (item.itemPrice * item.quantity), 0);
+        cartTotalPriceEl.textContent = `₹${total.toFixed(2)}`;
+    }
+
+    function updateCartIcon() {
+        const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+        cartCount.textContent = totalItems;
+    }
+
+    // --- NEW: WISHLIST LOGIC ---
+    function toggleWishlist(product, buttonElement) {
+        const index = wishlist.findIndex(item => item.id === product.id);
+        if (index > -1) {
+            wishlist.splice(index, 1); // Remove from wishlist
+            buttonElement.classList.remove('active');
+        } else {
+            wishlist.push(product); // Add to wishlist
+            buttonElement.classList.add('active');
+            showToast(`${product.itemName} added to wishlist!`, 'wishlist');
+        }
+        updateWishlist();
+    }
+
+    function updateWishlist() {
+        updateWishlistIcon();
+        saveStateToLocalStorage();
+        if (wishlistModal.classList.contains('active')) {
+            renderWishlistModal(); // Re-render modal if it's open
+        }
+    }
+
+    function updateWishlistIcon() {
+        wishlistCount.textContent = wishlist.length;
+    }
+
+    function renderWishlistModal() {
+        if (wishlist.length === 0) {
+            wishlistItemsContainer.innerHTML = `<div class="empty-cart-message"><i class="fas fa-heart-broken"></i><p>Your wishlist is empty.</p></div>`;
+        } else {
+            wishlistItemsContainer.innerHTML = '';
+            wishlist.forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'wishlist-item';
+                itemEl.innerHTML = `
+                    <img src="${item.itemImageUrl}" alt="${item.itemName}">
+                    <div class="wishlist-item-info">
+                        <h4>${item.itemName}</h4>
+                        <span class="price">₹${item.itemPrice} / kg</span>
+                    </div>
+                    <div class="wishlist-item-actions">
+                         <button class="action-button add-to-cart-btn"><i class="fas fa-cart-plus"></i> To Cart</button>
+                         <button class="action-button details-btn remove-from-wishlist-btn"><i class="fas fa-times"></i> Remove</button>
+                    </div>
+                `;
+                itemEl.querySelector('.add-to-cart-btn').addEventListener('click', () => {
+                    addToCart(item);
+                    // Optionally remove from wishlist after adding to cart
+                    wishlist = wishlist.filter(w => w.id !== item.id);
+                    updateWishlist();
+                    filterAndRenderProducts(); // Redraw cards to update heart icon
+                });
+                 itemEl.querySelector('.remove-from-wishlist-btn').addEventListener('click', () => {
+                    wishlist = wishlist.filter(w => w.id !== item.id);
+                    updateWishlist();
+                    filterAndRenderProducts(); // Redraw cards to update heart icon
+                });
+                wishlistItemsContainer.appendChild(itemEl);
+            });
+        }
+    }
+
+    // --- MODAL & PANEL TOGGLES ---
+    function toggleCartPanel() {
+        cartPanel.classList.toggle('active');
+        if (cartPanel.classList.contains('active')) updateCart();
+    }
+    function showProductDetails(product) {
+        document.getElementById('modal-img').src = product.itemImageUrl;
+        document.getElementById('modal-title').textContent = product.itemName;
+        document.getElementById('modal-price').textContent = `₹${product.itemPrice} / kg`;
+        document.getElementById('modal-seller').textContent = product.sellerName;
+        document.getElementById('modal-location').textContent = product.sellerLocation || 'N/A';
+        document.getElementById('modal-description').textContent = product.itemDescription || 'Detailed description not available.';
+        detailsModal.classList.add('active');
+    }
+    function hideProductDetails() { detailsModal.classList.remove('active'); }
+    // NEW: Wishlist Modal Toggle
+    function toggleWishlistModal() {
+        wishlistModal.classList.toggle('active');
+        if (wishlistModal.classList.contains('active')) renderWishlistModal();
+    }
+
+    // --- CHECKOUT LOGIC (Unchanged) ---
+    function showCheckoutStep(stepToShow) { [addressStep, paymentStep, confirmationStep].forEach(step => { step.classList.remove('active-step'); }); stepToShow.classList.add('active-step'); if (stepToShow === addressStep) checkoutTitle.textContent = "Delivery Address"; if (stepToShow === paymentStep) checkoutTitle.textContent = "Payment Method"; if (stepToShow === confirmationStep) checkoutTitle.textContent = "Success!"; }
+    function showCheckoutModal() { if (cart.length === 0) { showToast("Your cart is empty!", "error"); return; } showCheckoutStep(addressStep); cartPanel.classList.remove('active'); checkoutModal.classList.add('active'); }
+    function hideCheckoutModal() { checkoutModal.classList.remove('active'); setTimeout(() => { paymentOptionsContainer.style.display = 'block'; upiQrDisplay.style.display = 'none'; }, 500); }
+    addressForm.addEventListener('submit', (e) => { e.preventDefault(); showCheckoutStep(paymentStep); });
+    placeOrderBtn.addEventListener('click', () => { const selectedPayment = document.querySelector('input[name="payment"]:checked').value; if (selectedPayment === 'upi') { handleUpiPayment(); } else { showCheckoutStep(confirmationStep); cart = []; updateCart(); } });
+    function handleUpiPayment() { paymentOptionsContainer.style.display = 'none'; upiQrDisplay.style.display = 'block'; checkoutTitle.textContent = "Scan to Pay"; const totalAmount = cart.reduce((sum, item) => sum + (item.itemPrice * item.quantity), 0).toFixed(2); const upiId = '9655865777-3@axl'; const receiverName = 'Farmers Market'; const upiString = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(receiverName)}&am=${totalAmount}&cu=INR&tn=OrderPayment`; qrCodeContainer.innerHTML = ''; new QRCode(qrCodeContainer, { text: upiString, width: 200, height: 200, colorDark : "#000000", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H }); upiAmountEl.textContent = `Amount to Pay: ₹${totalAmount}`; }
+    confirmPaymentBtn.addEventListener('click', () => { showCheckoutStep(confirmationStep); cart = []; updateCart(); });
+    closeConfirmationBtn.addEventListener('click', hideCheckoutModal);
+
+    // --- GLOBAL EVENT LISTENERS ---
+    document.addEventListener("DOMContentLoaded", () => {
+        loadStateFromLocalStorage();
+        fetchAndRenderProducts();
+        updateCartIcon();
+        updateWishlistIcon();
+        
+        // NEW: Buyer page mobile menu listener
+        menuToggleBuyer.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+    });
+
+    productSearchInput.addEventListener('input', filterAndRenderProducts);
+    locationSearchInput.addEventListener('input', filterAndRenderProducts);
+    categoryFiltersContainer.addEventListener('click', (e) => {
+        if (e.target.closest('.category-btn')) {
+            categoryFiltersContainer.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
+            const button = e.target.closest('.category-btn');
+            button.classList.add('active');
+            activeCategory = button.dataset.category;
+            filterAndRenderProducts();
+        }
+    });
+    
+    cartButton.addEventListener('click', toggleCartPanel);
+    cartCloseBtn.addEventListener('click', toggleCartPanel);
+    modalCloseBtn.addEventListener('click', hideProductDetails);
+    detailsModal.addEventListener('click', (e) => { if (e.target === detailsModal) hideProductDetails(); });
+    // NEW Wishlist listeners
+    wishlistButton.addEventListener('click', toggleWishlistModal);
+    wishlistCloseBtn.addEventListener('click', toggleWishlistModal);
+    wishlistModal.addEventListener('click', (e) => { if(e.target === wishlistModal) toggleWishlistModal(); });
+    
+    document.querySelector('.checkout-btn').addEventListener('click', showCheckoutModal);
+    checkoutModalCloseBtn.addEventListener('click', hideCheckoutModal);
+
+    
+  </script>
+</body>
+</html>

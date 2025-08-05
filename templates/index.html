@@ -1,0 +1,1870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <title>AgroPulse AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+    :root {
+        --primary-color: #16A085;
+        --primary-hover: #117A65;
+        --primary-glow: rgba(22, 160, 133, 0.5);
+        --secondary-color: #1e272e;
+        --light-bg: #f1f5f9;
+        --white-bg: #ffffff;
+        --text-dark: #2c3e50;
+    }
+
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: var(--light-bg);
+        color: var(--text-dark);
+        margin: 0; padding: 0; display: flex;
+        overflow: hidden;
+    }
+
+    /* Base Animations */
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideDown { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+    @keyframes slideInLeft { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    @keyframes slideInFromTop {
+        from {
+            transform: translateY(-40px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* --- NEW CHATBOT STYLES --- */
+    .chatbot-toggler {
+        position: fixed;
+        bottom: 72px;
+        right: 30px;
+        z-index: 1050;
+        height: 55px;
+        width: 55px;
+        border: none;
+        outline: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: var(--primary-color);
+        color: white;
+        font-size: 2rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        transition: transform 0.2s ease-in-out, background-color 0.2s;
+    }
+
+    .chatbot-toggler:hover {
+        transform: scale(1.1);
+        background-color: var(--primary-hover);
+    }
+
+    .chatbot-toggler span {
+        position: absolute;
+        
+    }
+
+    .show-chatbot .chatbot-toggler span:first-child,
+    .chatbot-toggler span:last-child {
+        opacity: 0;
+    }
+
+    .show-chatbot .chatbot-toggler span:last-child {
+        opacity: 1;
+      
+    }
+    
+   .chatbot-container {
+    position: fixed;
+    /* Changed from 100px to move it down */
+    bottom: 0px;
+    right: 35px;
+    /* Changed from 420px to make it narrower */
+    width: 450px; 
+    height: 600px;
+    z-index: 1040;
+    background: var(--white-bg);
+    border-radius: 15px;
+    box-shadow: 0 0 128px 0 rgba(0,0,0,0.1), 0 32px 64px -48px rgba(0,0,0,0.5);
+    transform: scale(0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease-in-out;
+    transform-origin: bottom right;
+    display: flex;
+    flex-direction: column;
+}
+
+    .show-chatbot .chatbot-container {
+        transform: scale(1);
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+
+
+    .chatbot-container .chatbox {
+        overflow-y: auto;
+        height: 510px;
+        padding: 25px 20px 100px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .chatbox .chat {
+        display: flex;
+        max-width: 95%;
+    }
+    .chatbox .chat p {
+        padding: 12px 16px;
+        border-radius: 18px 18px 0 18px;
+        background: var(--primary-color);
+        color: white;
+        font-size: 0.95rem;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        margin: 0;
+    }
+    .chatbox .chat.incoming p {
+        background: #f2f2f2;
+        color: #000;
+        border-radius: 18px 18px 18px 0;
+    }
+    .chatbox .chat .fa-robot, .chatbox .chat .fa-user {
+        font-size: 1.2rem;
+        color: white;
+        background: var(--primary-color);
+        height: 32px;
+        width: 32px;
+        text-align: center;
+        line-height: 32px;
+        border-radius: 4px;
+        margin: 0 10px 7px 0;
+        align-self: flex-end;
+    }
+    .chatbox .chat.incoming .fa-robot {
+        color: white;
+        background: var(--primary-color);
+        margin: 0 10px 7px 0;
+    }
+    .chatbox .chat.outgoing {
+        justify-content: flex-end;
+        margin-left: auto;
+    }
+    
+    .chatbot-container .chat-input {
+        display: flex;
+        gap: 5px;
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        background: #fff;
+        padding: 15px 20px;
+        border-top: 1px solid #ddd;
+        border-radius: 0 0 15px 15px;
+        box-sizing: border-box;
+    }
+    .chat-input textarea {
+        height: 55px;
+        width: 100%;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        resize: none;
+        padding: 15px;
+        font-size: 0.95rem;
+        outline: none;
+        font-family: 'Poppins', sans-serif;
+        box-sizing: border-box;
+    }
+    .chat-input span {
+        align-self: flex-end;
+        height: 55px;
+        width: 55px;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: background-color 0.2s;
+    }
+    .chat-input span:hover {
+        background: var(--primary-hover);
+    }
+    /* --- END OF CHATBOT STYLES --- */
+
+
+    /* Loading Overlay */
+    #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); z-index: 9999; display: none; justify-content: center; align-items: center; color: white; font-size: 1.5rem; }
+    .spinner { border: 8px solid #f3f3f3; border-top: 8px solid var(--primary-color); border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; }
+
+    /* Layout: Header & Sidebar */
+    header {
+        position: fixed; top: 0; left: 220px; right: 0;
+        background: linear-gradient(90deg, #1abc9c, var(--primary-color));
+        color: white; display: flex; justify-content: center; align-items: center;
+        padding: 15px 30px; z-index: 1000; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        animation: slideDown 0.6s ease-out;
+    }
+
+    header h1 {
+        margin: 0; font-size: 1.6rem; font-weight: 600;
+        display: flex; align-items: center; gap: 12px;
+    }
+
+    .sidebar { position: fixed; top: 0; left: 0; width: 220px; height: 100%; background-color: var(--secondary-color); color: white; /* Removed padding-top for widget */ display: flex; flex-direction: column; align-items: flex-start; z-index: 1001; animation: slideInLeft 0.6s ease-out; }
+
+    /* --- Weather Widget Styles --- */
+    #sidebar-weather-widget { padding: 20px 15px; text-align: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); display: none; flex-direction: column; align-items: center; gap: 5px; color: #f1f5f9; background-color: rgba(0, 0, 0, 0.1); width: 100%; box-sizing: border-box; }
+    #sidebar-weather-widget i { font-size: 2.5rem; margin-bottom: 8px; text-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+    #sidebar-weather-widget #weather-temp { font-size: 1.6rem; font-weight: 600; }
+    #sidebar-weather-widget #weather-location { font-size: 0.9rem; font-weight: 400; opacity: 0.9; }
+
+    .sidebar a { padding: 15px 25px; color: white; text-decoration: none; width: 100%; display: flex; align-items: center; box-sizing: border-box; font-weight: 500; position: relative; transition: color 0.3s ease; }
+    .sidebar a::before { content: ''; position: absolute; top: 0; left: 0; height: 100%; width: 0; background-color: var(--primary-color); z-index: -1; transition: width 0.3s ease-in-out; }
+    .sidebar a:hover::before { width: 100%; }
+    .sidebar a i { margin-right: 15px; width: 20px; text-align: center; }
+
+    .content { margin-left: 220px; padding-top: 70px; width: calc(100% - 220px); height: calc(100vh - 70px); overflow-y: auto; }
+
+ 
+  .container {
+        display: none; flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        padding: 30px;
+        animation: fadeIn 0.5s ease-in-out;
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        position: relative;
+        width: 100%;
+        min-height: 100%;
+        box-sizing: border-box;
+    }
+
+    #disease .box,
+#prices .box,
+#planner .box,
+#buysell .box {
+    max-width: 550px;  
+    margin: 0 auto;    
+    text-align: center; 
+}
+
+/* Weather Update*/
+#weather .box {
+    max-width: 680px;
+    margin: 0 auto;   
+    text-align: center;
+}
+
+    #disease .box label,
+    #prices .box label,
+    #planner .box label,
+    #buysell .box label {
+        display: block;      
+        text-align: left;    
+        font-weight: 500;
+        margin-top: 20px;  
+        margin-bottom: 8px; 
+    }
+
+    /* Input and Select */
+    #disease .box input,
+    #disease .box select,
+    #prices .box input,
+    #prices .box select,
+    #planner .box input,
+    #planner .box select,
+    #buysell .box input,
+    #buysell .box select {
+        width: 100%;               
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        box-sizing: border-box;   
+    }
+
+    #disease .box button,
+    #weather .box button,
+    #prices .box button,
+    #planner .box button,
+    #buysell .box button { 
+        width: 100%;
+        padding: 12px;
+        margin-top: 30px; 
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        border-radius: 8px;
+        background-color: var(--primary-color);
+        color: white;
+        transition: background-color 0.3s ease;
+    }
+
+    #disease .box button:hover,
+    #weather .box button:hover,
+    #prices .box button:hover,
+    #planner .box button:hover ,
+    #buysell .box button:hover {
+        background-color: var(--primary-hover);
+    }
+
+   
+    .weather-search-form {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+    .weather-search-form input {
+        flex-grow: 1;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        width: 100%; /* Ensure it takes full width */
+        box-sizing: border-box;
+    }
+    .weather-search-form button {
+        padding: 0 20px;
+        border: none;
+        background-color: var(--primary-color);
+        color: white;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        margin-top: 0; /* Remove margin-top to align with input */
+        width: auto; /* width override */
+    }
+    .weather-search-form button:hover {
+        background-color: var(--primary-hover);
+    }
+
+    .form-divider {
+        text-align: center;
+        margin: 15px 0;
+        font-weight: 500;
+        color: #999;
+    }
+
+    #weather-output .weather-main-display {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 25px;
+        text-align: left;
+    }
+    .weather-icon-large {
+        font-size: 4.5rem; 
+        color: var(--primary-color);
+    }
+    .weather-details {
+        display: flex;
+        flex-direction: column;
+    }
+    .weather-city {
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+    .weather-temp {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-dark);
+    }
+    .weather-condition {
+        font-size: 1.1rem;
+        color: #555;
+    }
+
+   
+    #nearby-weather-container {
+        margin-top: 30px;
+        border-top: 1px solid #eee;
+        padding-top: 20px;
+    }
+    #nearby-weather-container h3 {
+        margin: 0 0 15px 0;
+        font-size: 1.2rem;
+        color: var(--text-dark);
+    }
+    /* அருகிலுள்ள இடங்களை തിരശ്ചീനமாக காட்டுவதற்கான புதிய ஸ்டைல்கள் */
+#nearby-weather-list {
+    display: flex;          /* Flex layout-க்கு மாற்றுதல் */
+    overflow-x: auto;       /* തിരശ്ചീനமாக scroll செய்ய அனுமதித்தல் */
+    padding-bottom: 15px;   /* Scrollbar-க்கு கீழ் சிறிது இடைவெளி */
+    gap: 15px;
+}
+.nearby-weather-card {
+    flex: 0 0 130px;        /* பெட்டிகளின் அளவை நிலையாக வைத்தல் */
+}
+
+/* Scrollbar-ஐ அழகாக மாற்றுதல் (optional) */
+#nearby-weather-list::-webkit-scrollbar {
+    height: 8px;
+}
+#nearby-weather-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+#nearby-weather-list::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+}
+#nearby-weather-list::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
+    .nearby-weather-card {
+        background-color: #f8f9fa;
+        border-radius: 12px;
+        padding: 15px;
+        text-align: center;
+        border: 1px solid #eee;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .nearby-weather-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    }
+    .nearby-weather-card .fas {
+        font-size: 2rem;
+        color: var(--primary-hover);
+        margin: 10px 0;
+    }
+    .nearby-city {
+        font-weight: 600;
+        display: block;
+    }
+    .nearby-temp {
+        font-size: 1.1rem;
+        font-weight: 500;
+        display: block;
+    }
+        
+    #login::before, #disease::before, #weather::before, #prices::before, #planner::before, #buysell::before, #about::before, #news::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1;
+    }
+
+   
+    .box, .login-page-container, #buysell-choice-wrapper, .about-wrapper, .news-grid {
+        position: relative;
+        z-index: 2;
+    }
+
+
+    #about { background-image: url('https://images.unsplash.com/photo-1596019285084-7a3897a2253a?auto=format&fit=crop&q=80&w=2070&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');}
+    #news { background-image: url('https://i.pinimg.com/736x/ea/40/7a/ea407a7b30b2ea41950ba7e8fb5c0978.jpg');}
+   
+    #disease { background-image: url('https://i.pinimg.com/1200x/60/bd/fc/60bdfc7c58455210f379fcdbc350a583.jpg'); }
+    #weather { background-image: url('https://images.unsplash.com/photo-1651523862184-5663390bea44?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8d2VhdGhlciUyMGZvcmVjYXN0fGVufDB8fDB8fHww'); }
+    #prices { background-image: url('https://images.pexels.com/photos/2252584/pexels-photo-2252584.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'); }
+    #planner { background-image: url('https://images.pexels.com/photos/440731/pexels-photo-440731.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'); }
+    #buysell { background-image: url('https://i.pinimg.com/1200x/b3/e9/5d/b3e95dc21cbb6d5d0e77e796dfe0fedd.jpg'); }
+
+    .box {
+        flex-grow: 0; flex-shrink: 1; background-color: var(--white-bg); border-radius: 16px;
+        padding: 30px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15); border-top: 5px solid var(--primary-color);
+    }
+    .box h2 {
+        font-size: 1.5rem; margin: 0 0 25px 0; color: var(--text-dark);
+        border-bottom: 1px solid #eee; padding-bottom: 15px;
+        display: flex; align-items: center; gap: 0;
+    }
+    .box h2 i {
+        font-size: 1.5rem; color: var(--primary-color); background-color: rgba(22, 160, 133, 0.1);
+        padding: 10px; border-radius: 50%; margin-right: 15px; transition: transform 0.3s ease;
+        width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;
+    }
+    .box:hover h2 i { transform: rotate(-10deg) scale(1.1); }
+    .result-box { margin-top: 20px; padding: 15px; background-color: #f8f9fa; border: 1px dashed #ddd; border-radius: 8px; min-height: 50px; }
+
+
+    #dashboard.container { padding: 0; margin: 0; width: 100%; max-width: none; height: 100%; position: relative; overflow: hidden; }
+    .slider-wrapper { display: flex; height: 100%; width: 500%; transition: transform 0.8s cubic-bezier(0.77, 0, 0.175, 1); }
+    .slide { width: 20%; height: 100%; background-color: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: white; padding: 2rem; box-sizing: border-box; cursor: pointer; position: relative; overflow: hidden; }
+    .slide::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)); z-index: 2; }
+    .slide-content { position: relative; z-index: 3; opacity: 0; transform: translateY(20px); animation: fadeIn 1s 0.5s ease-out forwards; }
+    .slide i { font-size: 4rem; margin-bottom: 1rem; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+    .slide h2 { font-size: 2.5rem; font-weight: 700; margin: 0; border: none; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+    .slide p { font-size: 1.2rem; margin-top: 0.5rem; max-width: 500px; }
+    .slider-nav { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 3; }
+    .slider-nav-dot { width: 12px; height: 12px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.5); cursor: pointer; transition: background-color 0.3s; }
+    .slider-nav-dot.active { background-color: white; }
+    .slide-background-gif {
+        position: absolute; top: 0; left: 0;
+        width: 100%; height: 100%; object-fit: cover; z-index: 1;
+    }
+
+   
+    #about.container { align-items: flex-start; }
+    .about-wrapper {
+        max-width: 900px; width: 100%; background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(245, 255, 250, 0.9));
+        padding: 50px; border-radius: 20px; border-top: 5px solid var(--primary-color);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.12); animation: slideInFromTop 0.8s ease-out forwards;
+        backdrop-filter: blur(10px);
+    }
+    .about-wrapper h2 {
+        text-align: center; font-size: 2.2rem; margin-bottom: 25px; color: var(--text-dark);
+        display: flex; justify-content: center; align-items: center; gap: 15px; border: none;
+    }
+    .about-wrapper p { line-height: 1.8; color: #444; text-align: justify; font-size: 1.05rem; }
+    .stats-counter {
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+        text-align: center; margin: 40px 0; padding: 20px;
+    }
+    .stat {
+        background: rgba(255, 255, 255, 0.7); padding: 25px 15px; border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05); transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-bottom: 3px solid var(--primary-color);
+    }
+    .stat:hover { transform: translateY(-10px); box-shadow: 0 12px 25px rgba(22, 160, 133, 0.2); }
+    .stat i { font-size: 2rem; color: var(--primary-color); margin-bottom: 10px; }
+    .stat h3 { margin: 0; font-size: 2.8rem; color: var(--primary-hover); font-weight: 700; }
+    .stat p { margin: 5px 0 0 0; color: var(--text-dark); font-weight: 500; font-size: 1rem; }
+    .team-section { margin-top: 40px; }
+    .team-section h2 {
+        text-align: center; font-size: 2rem; border-bottom: 3px solid var(--primary-color);
+        color: var(--text-dark); display: inline-block; padding-bottom: 10px;
+        margin-bottom: 40px; font-weight: 600;
+    }
+    .team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; }
+    .team-card {
+        position: relative; background: #fff; border-radius: 15px; text-align: center;
+        padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        transition: transform 0.3s, box-shadow 0.3s; overflow: hidden;
+    }
+    .team-card:hover { transform: translateY(-10px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+    .team-card img {
+        width: 120px; height: 120px; border-radius: 50%; object-fit: cover;
+        border: 5px solid var(--primary-color); transition: transform 0.4s ease; margin-bottom: 15px;
+    }
+    .team-card:hover img { transform: scale(1.1) rotate(5deg); }
+    .team-card h4 { margin: 15px 0 5px 0; font-size: 1.25rem; }
+    .team-card p { margin: 0; color: #777; font-style: italic; }
+    .team-card-overlay {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(22, 160, 133, 0.85);
+        display: flex; justify-content: center; align-items: center;
+        opacity: 0; transform: translateY(100%); transition: all 0.4s ease-in-out;
+    }
+    .team-card:hover .team-card-overlay { opacity: 1; transform: translateY(0); }
+    .portfolio-btn {
+        padding: 10px 25px; background-color: var(--white-bg); color: var(--primary-hover);
+        font-weight: 600; text-decoration: none; border-radius: 50px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); transition: transform 0.3s ease;
+    }
+    .portfolio-btn:hover { transform: scale(1.1); }
+
+
+    .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; width: 100%; padding: 10px; }
+    .news-card { background: var(--white-bg); border-radius: 12px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.08); display: flex; flex-direction: column; transition: transform 0.3s, box-shadow 0.3s; text-decoration: none; color: inherit; }
+    .news-card:hover { transform: translateY(-8px); box-shadow: 0 10px 25px rgba(0,0,0,0.12); }
+    .news-card-img { width: 100%; height: 200px; object-fit: cover; }
+    .news-card-content { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
+    .news-card-content h3 { font-size: 1.2rem; margin: 0 0 10px 0; color: var(--text-dark); }
+    .news-card-content p { font-size: 0.9rem; color: #555; line-height: 1.6; margin: 0 0 15px 0; flex-grow: 1; }
+    .news-card-footer { font-size: 0.8rem; color: #888; border-top: 1px solid #eee; padding-top: 10px; }
+    #news-loader { color: white; font-size: 1.5rem; text-align: center; z-index: 5; position: relative; }
+
+   
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-color: rgba(0, 0, 0, 0.7); z-index: 2000;
+        display: flex; justify-content: center; align-items: center;
+    }
+    .modal-content {
+        position: relative; background-color: #fff; width: 85%; height: 85%;
+        max-width: 1200px; border-radius: 10px; box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+        padding: 15px; box-sizing: border-box;
+    }
+    .modal-close {
+        position: absolute; top: -15px; right: -15px; width: 40px; height: 40px;
+        background-color: var(--primary-color); color: white; font-size: 28px;
+        font-weight: bold; border-radius: 50%; display: flex;
+        justify-content: center; align-items: center; cursor: pointer;
+        line-height: 1; transition: transform 0.2s ease;
+    }
+    .modal-close:hover { transform: scale(1.1) rotate(90deg); }
+    #news-iframe { width: 100%; height: 100%; border-radius: 5px; }
+
+   
+    #login.container {
+        padding: 0; 
+        align-items: center;
+        justify-content: center;
+    }
+    .login-page-container {
+        background-color: var(--white-bg);
+        border-radius: 10px;
+        box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+        position: relative;
+        overflow: hidden;
+        width: 768px;
+        max-width: 100%;
+        min-height: 520px;
+        animation: fadeInUp 0.8s ease-out;
+    }
+    .form-container {
+        position: absolute;
+        top: 0;
+        height: 100%;
+        transition: all 0.6s ease-in-out;
+    }
+    .sign-in-container { left: 0; width: 50%; z-index: 2; }
+    .sign-up-container { left: 0; width: 50%; z-index: 1; opacity: 0; }
+
+    .login-page-container form {
+        background-color: var(--white-bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        padding: 0 50px;
+        height: 100%;
+        text-align: center;
+    }
+    .login-page-container h1 { font-weight: bold; margin: 0 0 15px 0; color: var(--text-dark); }
+    .login-page-container p { font-size: 14px; font-weight: 100; line-height: 20px; letter-spacing: 0.5px; margin: 20px 0 30px; }
+    .login-page-container input {
+        background-color: #eee;
+        border: none;
+        padding: 12px 15px;
+        margin: 8px 0;
+        width: 100%;
+        border-radius: 8px;
+        box-sizing: border-box;
+    }
+    .login-page-container button {
+        border-radius: 20px;
+        border: 1px solid var(--primary-color);
+        background-color: var(--primary-color);
+        color: #FFFFFF;
+        font-size: 12px;
+        font-weight: bold;
+        padding: 12px 45px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        transition: transform 80ms ease-in, background-color 0.3s;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+    .login-page-container button:hover {
+        background-color: var(--primary-hover);
+    }
+    .login-page-container button:active { transform: scale(0.95); }
+    .login-page-container button:focus { outline: none; }
+    .login-page-container button.ghost {
+        background-color: transparent;
+        border-color: #FFFFFF;
+    }
+
+    .overlay-container {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: 50%;
+        height: 100%;
+        overflow: hidden;
+        transition: transform 0.6s ease-in-out;
+        z-index: 100;
+    }
+    .overlay {
+        background: var(--primary-color);
+        background: linear-gradient(to right, var(--primary-hover), var(--primary-color));
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-position: 0 0;
+        color: #FFFFFF;
+        position: relative;
+        left: -100%;
+        height: 100%;
+        width: 200%;
+        transform: translateX(0);
+        transition: transform 0.6s ease-in-out;
+    }
+    .overlay-panel {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        padding: 0 40px;
+        text-align: center;
+        top: 0;
+        height: 100%;
+        width: 50%;
+        transform: translateX(0);
+        transition: transform 0.6s ease-in-out;
+    }
+    .overlay-left { transform: translateX(-20%); }
+    .overlay-right { right: 0; transform: translateX(0); }
+
+    /* Animation for the panels */
+    .login-page-container.right-panel-active .sign-in-container { transform: translateX(100%); }
+    .login-page-container.right-panel-active .overlay-container { transform: translateX(-100%); }
+    .login-page-container.right-panel-active .sign-up-container {
+        transform: translateX(100%);
+        opacity: 1;
+        z-index: 5;
+        animation: show 0.6s;
+    }
+    @keyframes show {
+        0%, 49.99% { opacity: 0; z-index: 1; }
+        50%, 100% { opacity: 1; z-index: 5; }
+    }
+    .login-page-container.right-panel-active .overlay { transform: translateX(50%); }
+    .login-page-container.right-panel-active .overlay-left { transform: translateX(0); }
+    .login-page-container.right-panel-active .overlay-right { transform: translateX(20%); }
+
+
+    /* Buy/Sell Choice Styles */
+    #buysell-choice-wrapper { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 40px; width: 100%; max-width: 800px; }
+    .choice-card { background-color: var(--white-bg); border-radius: 20px; padding: 40px 30px; width: 280px; text-align: center; cursor: pointer; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.09); transition: transform 0.3s ease, box-shadow 0.3s ease; border: 2px solid transparent; opacity: 0; animation: fadeInUp 0.5s ease-out forwards; }
+    .choice-card:nth-child(2) { animation-delay: 0.2s; }
+    .choice-card:hover { transform: translateY(-12px); box-shadow: 0 12px 25px rgba(22, 160, 133, 0.2); border-color: var(--primary-color); }
+    .choice-card:active { transform: translateY(-5px); }
+    .choice-card i { font-size: 4rem; color: var(--primary-color); margin-bottom: 20px; }
+    .choice-card h3 { font-size: 1.8rem; color: var(--text-dark); margin: 0 0 10px 0; }
+    .choice-card p { font-size: 1rem; color: #555555; margin: 0; line-height: 1.5; }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        body { flex-direction: column; overflow: auto; }
+        .sidebar { width: 100%; height: auto; position: relative; flex-direction: row; overflow-x: auto; padding-top: 0; animation: none; z-index: 1002; }
+        #sidebar-weather-widget { display: none !important; }
+        .sidebar a { flex: 1; text-align: center; padding: 15px 5px; justify-content: center; }
+        .sidebar a i { margin-right: 8px; }
+        .sidebar a span { display: none; }
+        header { position: relative; left: 0; animation: none; }
+        .content { margin-left: 0; padding-top: 0; width: 100%; height: auto; }
+        .slide h2 { font-size: 1.8rem; }
+        .slide p { font-size: 1rem; }
+        .choice-card { width: 100%; max-width: 300px; }
+        .stats-counter { grid-template-columns: 1fr; }
+        .about-wrapper { padding: 25px; }
+        .login-page-container {
+             width: 100%;
+             min-height: calc(100vh - 58px); /* Adjust for header/sidebar height on mobile */
+             border-radius: 0;
+             box-shadow: none;
+        }
+        .form-container {
+             width: 100%;
+             padding: 0 25px;
+             box-sizing: border-box;
+        }
+        .login-page-container.right-panel-active .sign-in-container {
+            transform: translateX(100%);
+            display: none; /* Hide instead of just moving */
+        }
+         .sign-in-container {
+            display: flex;
+        }
+         .sign-up-container {
+            display: none; /* Hide sign up by default */
+        }
+        .login-page-container.right-panel-active .sign-up-container {
+            transform: translateX(0);
+            opacity: 1;
+            z-index: 5;
+            display: flex; /* Show it when active */
+        }
+         .login-page-container.right-panel-active .sign-in-container {
+            display: none; /* Hide sign in when sign up is active */
+        }
+        .overlay-container {
+            display: none; /* Completely hide the overlay on mobile */
+        }
+
+        /* Responsive Chatbot */
+        .chatbot-container {
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
+            transform: scale(1);
+            transition: transform 0.3s ease-in-out;
+            transform: translateX(100%); /* Start off-screen */
+        }
+        .show-chatbot .chatbot-container {
+            transform: translateX(0%); /* Slide in */
+        }
+        .chatbot-container .chatbox {
+            height: 90%;
+            height: calc(100% - 150px);
+        }
+        .chatbot-toggler {
+            bottom: 20px;
+            right: 20px;
+        }
+    }
+</style>
+</head>
+<body>
+    <button class="chatbot-toggler">
+        <span class="fa-solid fa-comments"></span>
+        <span class="fa-solid fa-xmark"></span>
+    </button>
+    <div class="chatbot-container">
+       
+        <ul class="chatbox">
+            <li class="chat incoming">
+                <span class="fa-solid fa-robot"></span>
+                <p>Hi there 👋<br>How can I help you today?</p>
+            </li>
+        </ul>
+        <div class="chat-input">
+            <textarea placeholder="Enter a message..." required></textarea>
+            <span id="send-btn" class="fa-solid fa-paper-plane"></span>
+        </div>
+    </div>
+
+
+    <div id="loading-overlay"><div class="spinner"></div></div>
+
+    <div class="sidebar">
+        <div id="sidebar-weather-widget">
+            <i class="fas fa-spinner fa-spin"></i>
+            <span id="weather-temp">--°C</span>
+            <span id="weather-location">Loading...</span>
+        </div>
+
+        <a href="#" onclick="App.showSection('dashboard')" style="display: none;"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+        <a href="#" onclick="App.showSection('about')" style="display: none;"><i class="fas fa-info-circle"></i> <span>About</span></a>
+        <a href="#" onclick="App.showSection('disease')" style="display: none;"><i class="fas fa-leaf"></i> <span>Crop Disease</span></a>
+        <a href="#" onclick="App.showSection('weather')" style="display: none;"><i class="fas fa-cloud-sun-rain"></i> <span>Weather</span></a>
+        <a href="#" onclick="App.showSection('prices')" style="display: none;"><i class="fas fa-tags"></i> <span>Prices</span></a>
+        <a href="#" onclick="App.showSection('planner')" style="display: none;"><i class="fas fa-brain"></i> <span>AI Planner</span></a>
+        <a href="#" onclick="App.showSection('buysell')" style="display: none;"><i class="fas fa-store"></i> <span>Buy/Sell</span></a>
+        <a href="#" onclick="App.showSection('news')" style="display: none;"><i class="fas fa-newspaper"></i> <span>Agri News</span></a>
+
+        <a href="#" id="nav-login" onclick="App.showSection('login')"><i class="fas fa-sign-in-alt"></i> <span>Login</span></a>
+        <a href="#" id="nav-logout" onclick="App.logoutUser()" style="display: none;"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a>
+    </div>
+
+    <header><h1><i class="fas fa-leaf"></i>AgroPulse AI</h1></header>
+
+    <div class="content">
+        <div class="container" id="dashboard">
+             <div class="slider-wrapper">
+                 <div class="slide" onclick="App.showSection('weather')">
+                     <img src="https://i.gifer.com/Iqt.gif" class="slide-background-gif" alt="Weather animation">
+                     <div class="slide-content">
+                         <i class="fas fa-cloud-sun-rain"></i>
+                         <h2>Weather Forecast</h2>
+                         <p>Get real-time weather updates to plan your farming activities.</p>
+                     </div>
+                 </div>
+
+                 <div class="slide" onclick="App.showSection('disease')">
+                     <img src="https://s14.gifyu.com/images/bNLvJ.gif" class="slide-background-gif" alt="Crop inspection animation">
+                     <div class="slide-content">
+                         <i class="fas fa-leaf"></i>
+                         <h2>Crop Disease</h2>
+                         <p>Upload a leaf image to instantly detect diseases and get remedies.</p>
+                     </div>
+                 </div>
+
+                 <div class="slide" onclick="App.showSection('planner')">
+                     <img src="https://s14.gifyu.com/images/bNLmY.gif" class="slide-background-gif" alt="Farming planner animation">
+                     <div class="slide-content">
+                         <i class="fas fa-brain"></i>
+                         <h2>AI Planner</h2>
+                         <p>Receive intelligent suggestions for crops based on your land and season.</p>
+                     </div>
+                 </div>
+
+                 <div class="slide" onclick="App.showSection('prices')">
+                     <img src="https://s14.gifyu.com/images/bNLIp.gif" class="slide-background-gif" alt="Market prices animation">
+                     <div class="slide-content">
+                         <i class="fas fa-tags"></i>
+                         <h2>Market Prices</h2>
+                         <p>Track the latest vegetable prices in your local market.</p>
+                     </div>
+                 </div>
+
+                 <div class="slide" onclick="App.showSection('buysell')">
+                     <img src="https://s14.gifyu.com/images/bNLuQ.gif" class="slide-background-gif" alt="Market animation">
+                     <div class="slide-content">
+                         <i class="fas fa-store"></i>
+                         <h2>Market</h2>
+                         <p>Directly buy & sell farm products.</p>
+                     </div>
+                 </div>
+             </div>
+             <div class="slider-nav"></div>
+        </div>
+
+        <div class="container" id="about">
+            <div class="about-wrapper">
+                <h2><i class="fas fa-info-circle"></i>About AgroPulse AI</h2>
+                <p>AgroPulse AI is a modern, AI-powered web application designed to be a comprehensive digital companion for farmers. Our mission is to empower the agricultural community by providing easy access to vital information, predictive tools, and a direct-to-market platform, all in one place. From weather forecasts to AI-driven crop disease detection, we leverage technology to help farmers make informed decisions, increase productivity, and improve their livelihoods.</p>
+
+                <div class="stats-counter">
+                    <div class="stat">
+                        <i class="fas fa-users"></i>
+                        <h3 id="users-counter">502</h3>
+                        <p>Happy Users</p>
+                    </div>
+                    <div class="stat">
+                        <i class="fas fa-cogs"></i>
+                        <h3 id="features-counter">7+</h3>
+                        <p>Core Features</p>
+                    </div>
+                    <div class="stat">
+                        <i class="fas fa-bullseye"></i>
+                        <h3 id="goals-counter">20+</h3>
+                        <p>States Reached</p>
+                    </div>
+                </div>
+                <div class="team-section">
+                    <center><h2>Meet the Development Team</h2></center>
+                    <div class="team-grid">
+                        <div class="team-card">
+                            <img src="https://i.pinimg.com/1200x/4f/33/80/4f33809fd4af15a7402f9f6c38562511.jpg" alt="Team Member 1">
+                            <h4>Lokesh</h4>
+                            <p>Full-Stack Developer with a Passion for UI/UX Designer</p>
+                            <div class="team-card-overlay">
+                                <a href="http://lokeshloki.site" class="portfolio-btn" target="_blank" rel="noopener noreferrer">Portfolio</a>
+                            </div>
+                        </div>
+
+                        <div class="team-card">
+                            <img src="https://i.pinimg.com/1200x/b6/b0/bc/b6b0bcd10ab4332e2909418a3ddd5b75.jpg" alt="Team Member 2">
+                            <h4>Sarjan</h4>
+                            <p>Full-Stack Developer</p>
+                            <div class="team-card-overlay">
+                                <a href="https://sarjan.site/" class="portfolio-btn" target="_blank" rel="noopener noreferrer">Portfolio</a>
+                            </div>
+                        </div>
+
+                        <div class="team-card">
+                            <img src="https://i.pinimg.com/1200x/38/0c/ae/380cae5587614c0d2d95eb8be1c966d0.jpg" alt="Team Member 3">
+                            <h4>Nishanth</h4>
+                            <p>Database Management</p>
+                            <div class="team-card-overlay">
+                                <a href="https://www.nishanthk.site/" class="portfolio-btn" target="_blank" rel="noopener noreferrer">Portfolio</a>
+                            </div>
+                        </div>
+
+                        <div class="team-card">
+                            <img src="https://i.pinimg.com/1200x/e8/1f/e6/e81fe6a30963e568b47d29a58648793a.jpg" alt="Team Member 4">
+                            <h4>Karthick kumar</h4>
+                            <p>AI/ML Specialist</p>
+                            <div class="team-card-overlay">
+                                <a href="https://karthick.site/" class="portfolio-btn" target="_blank" rel="noopener noreferrer">Portfolio</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container" id="news">
+            <div id="news-loader" style="display: none;"><div class="spinner"></div><br>Fetching latest news...</div>
+            <div class="news-grid" id="news-grid"></div>
+        </div>
+
+        <div class="container" id="login">
+            <div class="login-page-container" id="login-container">
+                <div class="form-container sign-up-container">
+                    <form action="#">
+                        <h1>Create Account</h1>
+                        <input type="email" id="register-email" placeholder="Email" />
+                        <input type="password" id="register-password" placeholder="Password" />
+                        <input type="password" id="register-confirm-password" placeholder="Confirm Password" />
+                        <button type="button" onclick="App.registerUser()">Sign Up</button>
+                        <div id="register-status" class="result-box" style="display:none; background: transparent; border: none; padding: 10px 0 0 0;"></div>
+                    </form>
+                </div>
+                <div class="form-container sign-in-container">
+                    <form action="#">
+                        <h1>Sign In</h1>
+                        <input type="email" id="login-email" placeholder="Email" />
+                        <input type="password" id="login-password" placeholder="Password" />
+                        <button type="button" onclick="App.loginUser()">Sign In</button>
+                        <div id="login-status" class="result-box" style="display:none; background: transparent; border: none; padding: 10px 0 0 0;"></div>
+                    </form>
+                </div>
+                <div class="overlay-container">
+                    <div class="overlay">
+                        <div class="overlay-panel overlay-left">
+                            <h1>Welcome Back!</h1>
+                            <p>To keep connected with us please login with your personal info</p>
+                            <button class="ghost" id="signIn">Sign In</button>
+                        </div>
+                        <div class="overlay-panel overlay-right">
+                            <h1>Hello, Farmer!</h1>
+                            <p>Enter your personal details and start your journey with us</p>
+                            <button class="ghost" id="signUp">Sign Up</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="container" id="disease">
+    <div class="box">
+        <h2><i class="fas fa-camera-retro"></i> Disease Detector</h2>
+        
+        <p>Use your camera for real-time analysis.</p>
+        <div id="video-container" style="display: none; border: 2px solid var(--primary-color); border-radius: 8px; margin-bottom: 20px; background-color: #000; position: relative;">
+            <img id="video-stream" width="100%" alt="Live camera feed">
+            <div id="scan-line" style="position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--primary-color); box-shadow: 0 0 15px var(--primary-color); animation: scan 3s linear infinite alternate;"></div>
+        </div>
+        <button id="camera-btn" onclick="App.toggleCamera()">
+            <i class="fas fa-video"></i> Start Camera
+        </button>
+
+        <div style="display: flex; align-items: center; text-align: center; margin: 25px 0;">
+            <hr style="flex-grow: 1; border: none; border-top: 1px solid #ddd;">
+            <span style="padding: 0 15px; color: #888; font-weight: 500;">OR</span>
+            <hr style="flex-grow: 1; border: none; border-top: 1px solid #ddd;">
+        </div>
+
+        <p>Upload an image file from your device.</p>
+        <form id="disease-upload-form" enctype="multipart/form-data" style="margin-top:0;">
+            <input type="file" name="leaf" id="leafImage" accept="image/*" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 15px;"/>
+            <button type="submit" style="margin-top:0;">🔍 Predict from File</button>
+        </form>
+
+        <div id="disease-result" class="result-box">
+            Select an option above to begin.
+        </div>
+    </div>
+</div>
+       
+        <div class="container" id="weather">
+            <div class="box">
+                <h2><i class="fas fa-cloud-sun-rain"></i> Weather Forecast</h2>
+               
+                <div class="weather-search-form">
+                    <input type="text" id="city-search-input" placeholder="Enter a city name...">
+                    <button onclick="App.getWeatherByCity()"><i class="fas fa-search"></i> Search</button>
+                </div>
+               
+                <div class="form-divider">OR</div>
+               
+                <button onclick="App.getWeatherByLocation()">📍 Get My Location's Forecast</button>
+               
+                <div id="weather-output" class="result-box"></div>
+               
+                <div id="nearby-weather-container" style="display: none;">
+                    <h3>Weather in Nearby Places</h3>
+                    <div id="nearby-weather-list">
+                         </div>
+                </div>
+            </div>
+        </div>
+
+       <div class="container" id="prices">
+            <div class="box">
+                <h2><i class="fas fa-tags"></i> Vegetable Price Tracker</h2>
+                <label for="veg-name">🥬 Vegetable Name:</label>
+                <input type="text" id="veg-name" placeholder="e.g. Tomato" />
+                <label for="veg-location">📍 Market/City:</label>
+                <input type="text" id="veg-location" placeholder="e.g. Coimbatore" />
+                <button onclick="App.getPrices()">📦 Get Price</button>
+                <div id="price-list" class="result-box"></div>
+            </div>
+        </div>
+        <div class="container" id="planner"><div class="box"><h2><i class="fas fa-brain"></i> AI Planner</h2><label for="crop">🌾 Crop Name:</label><input type="text" id="crop" placeholder="e.g. Wheat" /><label for="area">📏 Land Area (in acres):</label><input type="number" id="area" placeholder="e.g. 2.5" /><label for="season">⛅ Current Season:</label><select id="season"><option value="">-- Select --</option><option value="kharif">Kharif</option><option value="rabi">Rabi</option><option value="summer">Summer</option></select><button onclick="App.getPlan()">💡 Get Suggestion</button><div id="planner-output" class="result-box"></div></div></div>
+
+        <div class="container" id="buysell" style="flex-direction: column; justify-content: flex-start; align-items: center; padding-top: 50px;">
+
+            <div id="buysell-choice-wrapper" style="display: flex;">
+                <div id="btn-seller-choice" class="choice-card" role="button" tabindex="0">
+                    <i class="fas fa-seedling"></i>
+                    <h3>I am a Seller</h3>
+                    <p>List your fresh farm products for buyers to see.</p>
+                </div>
+                <div id="btn-buyer-choice" class="choice-card" role="button" tabindex="0">
+                    <i class="fas fa-shopping-cart"></i>
+                    <h3>I am a Buyer</h3>
+                    <p>Browse and buy products directly from farmers.</p>
+                </div>
+            </div>
+
+            <div id="seller-form-container" class="box" style="display: none; width: 100%; max-width: 500px; margin-top: 30px;">
+                <h2><i class="fas fa-seedling"></i> Sell Your Product</h2>
+
+                <label for="seller-name">👤 Seller Name:</label>
+                <input type="text" id="seller-name" placeholder="Enter your name">
+
+                <label for="seller-item-name">📦 Product Name:</label>
+                <input type="text" id="seller-item-name" placeholder="e.g. Tomato, Onion">
+
+                <label for="seller-location">📍 Location:</label>
+                <input type="text" id="seller-location" placeholder="e.g. Coimbatore, Salem">
+
+                <label for="seller-category">🌾 Category:</label>
+                <select id="seller-category">
+                    <option value="">-- Select a Category --</option>
+                    <option value="vegetables">Vegetable</option>
+                    <option value="fruits">Fruit</option>
+                    <option value="grains">Grains</option>
+                    <option value="other">Other</option>
+                </select>
+
+                <label for="seller-item-image">🖼️ Product Image:</label>
+                <input type="file" id="seller-item-image" accept="image/*">
+
+                <label for="seller-price">💰 Price (per kg):</label>
+                <input type="number" id="seller-price" placeholder="e.g. 25">
+
+                <button onclick="App.submitSellerItem()">📤 Submit Item</button>
+                <div id="seller-submit-status" class="result-box"></div>
+                <button onclick="App.showBuysellChoice()" style="margin-top: 10px; background-color: #7f8c8d;">← Go Back</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="news-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <span class="modal-close" onclick="App.closeNewsModal()">×</span>
+            <iframe id="news-iframe"
+                    src=""
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen>
+            </iframe>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+
+    <script>
+        const App = {
+            API_BASE_URL: 'http://127.0.0.1:5000',
+
+            camera:{
+                interval: null,
+                isStreaming: false
+            },
+            services: { auth: null, db: null, storage: null },
+            newsLoaded: false,
+            isNewUser: false,
+            slider: {
+                interval: null,
+                currentIndex: 0,
+                wrapper: null,
+                nav: null,
+                slidesCount: 5
+            },
+            
+            // New chatbot properties
+            chatbot: { 
+                toggler: null,
+                sendBtn: null,
+                input: null,
+                chatbox: null
+            },
+
+            init: function() {
+                document.addEventListener('DOMContentLoaded', () => {
+                    this.initServices();
+                    this.bindEvents();
+                    // New: Initialize chatbot
+                    this.initChatbot(); 
+                    this.services.auth.onAuthStateChanged(this.handleAuthStateChange.bind(this));
+                });
+            },
+
+            initServices: function() {
+                const firebaseConfig = {
+                     apiKey: "AIzaSyCXK0KHqLhKVAAm5xr0ASbFKJM5IwVLeTY",
+                    authDomain: "agri--sps-project.firebaseapp.com",
+                    projectId: "agri--sps-project",
+                    storageBucket: "agri--sps-project.firebasestorage.app",
+                    messagingSenderId: "762110077628",
+                    appId: "1:762110077628:web:9d219b9d67bbecf270beb9",
+                    measurementId: "G-CZ1QZ6437H"
+                };
+                firebase.initializeApp(firebaseConfig);
+                this.services.auth = firebase.auth();
+                this.services.db = firebase.firestore();
+                this.services.storage = firebase.storage();
+            },
+
+            bindEvents: function() {
+                 // For new login page
+                const signUpButton = document.getElementById('signUp');
+                const signInButton = document.getElementById('signIn');
+                const container = document.getElementById('login-container');
+
+                if(signUpButton && signInButton && container) {
+                    signUpButton.addEventListener('click', () => container.classList.add('right-panel-active'));
+                    signInButton.addEventListener('click', () => container.classList.remove('right-panel-active'));
+                }
+
+
+                // Other event listeners
+                 document.getElementById('disease-upload-form').addEventListener('submit', (e) => {
+                     e.preventDefault();
+                     this.predictDiseaseFromFile(e.currentTarget);
+                });
+
+                
+
+                document.getElementById('btn-seller-choice').addEventListener('click', () => this.showSellerForm());
+                document.getElementById('btn-buyer-choice').addEventListener('click', () => this.redirectToBuyerPage());
+            },
+
+            showSection: function(sectionId) {
+                const sections = ['dashboard', 'about', 'disease', 'weather', 'prices', 'planner', 'login', 'buysell', 'news'];
+                clearInterval(this.slider.interval);
+                sections.forEach(id => {
+                    const container = document.getElementById(id);
+                    if (container) container.style.display = id === sectionId ? 'flex' : 'none';
+                });
+
+                if (sectionId === 'about') {
+                    this.triggerCounters();
+                } else if (sectionId === 'dashboard') {
+                    this.initDashboardSlider();
+                } else if (sectionId === 'login') {
+                    document.getElementById('login-container')?.classList.remove('right-panel-active');
+                } else if (sectionId === 'buysell') {
+                    this.showBuysellChoice();
+                } else if (sectionId === 'news' && !this.newsLoaded) {
+                    this.showLoadingOverlay(true); // Show loader for news
+                    this.getNews().finally(() => this.showLoadingOverlay(false));
+                }
+            },
+            
+            // --- NEW CHATBOT FUNCTIONS ---
+            initChatbot: function() {
+                this.chatbot.toggler = document.querySelector(".chatbot-toggler");
+                this.chatbot.sendBtn = document.getElementById("send-btn");
+                this.chatbot.input = document.querySelector(".chat-input textarea");
+                this.chatbot.chatbox = document.querySelector(".chatbox");
+                
+                this.chatbot.toggler.addEventListener("click", () => document.body.classList.toggle("show-chatbot"));
+                this.chatbot.sendBtn.addEventListener("click", () => this.handleChat());
+                this.chatbot.input.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        this.handleChat();
+                    }
+                });
+            },
+
+            createChatLi: function(message, className) {
+                const chatLi = document.createElement("li");
+                chatLi.classList.add("chat", className);
+                let chatContent = className === "outgoing" 
+                    ? `<p>${message}</p>` 
+                    : `<span class="fa-solid fa-robot"></span><p>${message}</p>`;
+                chatLi.innerHTML = chatContent;
+                return chatLi;
+            },
+
+            generateResponse: async function(userMessage) {
+                const thinkingLi = this.createChatLi("Thinking...", "incoming");
+                this.chatbot.chatbox.appendChild(thinkingLi);
+                this.chatbot.chatbox.scrollTo(0, this.chatbot.chatbox.scrollHeight);
+                
+                try {
+                    const response = await fetch(`${this.API_BASE_URL}/ask-agro-assistant`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ question: userMessage })
+                    });
+
+                    if (!response.ok) {
+                         const errData = await response.json();
+                        throw new Error(errData.error || "Something went wrong.");
+                    }
+                    
+                    const data = await response.json();
+                    thinkingLi.querySelector("p").textContent = data.answer;
+
+                } catch (error) {
+                    thinkingLi.querySelector("p").textContent = "Oops! Something went wrong. Please try again.";
+                     thinkingLi.querySelector("p").style.color = "#d9534f"; // Make error red
+                } finally {
+                    this.chatbot.chatbox.scrollTo(0, this.chatbot.chatbox.scrollHeight);
+                }
+            },
+            
+            handleChat: function() {
+                const userMessage = this.chatbot.input.value.trim();
+                if(!userMessage) return;
+
+                this.chatbot.input.value = "";
+                this.chatbot.chatbox.appendChild(this.createChatLi(userMessage, "outgoing"));
+                this.chatbot.chatbox.scrollTo(0, this.chatbot.chatbox.scrollHeight);
+
+                setTimeout(() => {
+                    this.generateResponse(userMessage);
+                }, 600);
+            },
+            // --- END OF CHATBOT FUNCTIONS ---
+
+            handleAuthStateChange: function(user) {
+                const navItems = document.querySelectorAll('.sidebar a:not(#nav-login):not(#nav-logout)');
+                const loginLink = document.getElementById('nav-login');
+                const logoutLink = document.getElementById('nav-logout');
+                const header = document.querySelector('header');
+                const content = document.querySelector('.content');
+                const weatherWidget = document.getElementById('sidebar-weather-widget');
+
+                if (user) {
+                    loginLink.style.display = 'none';
+                    logoutLink.style.display = 'flex';
+                    weatherWidget.style.display = 'flex';
+                    navItems.forEach(item => item.style.display = 'flex');
+                    header.style.display = 'flex';
+                    content.style.display = 'block';
+                    this.showSection('dashboard');
+                    this.fetchSidebarWeather();
+                } else {
+                    loginLink.style.display = 'flex';
+                    logoutLink.style.display = 'none';
+                    weatherWidget.style.display = 'none';
+                    navItems.forEach(item => item.style.display = 'none');
+                    this.showSection('login');
+                    this.newsLoaded = false;
+                }
+            },
+
+            registerUser: function() {
+                const email = document.getElementById('register-email').value;
+                const password = document.getElementById('register-password').value;
+                const confirmPassword = document.getElementById('register-confirm-password').value;
+                const statusDiv = document.getElementById('register-status');
+                statusDiv.style.display = 'block'; // Show status div
+
+                if (!email || !password || !confirmPassword) {
+                    statusDiv.innerHTML = `<p style="color:red;">Please fill in all fields.</p>`;
+                    return;
+                }
+                if (password !== confirmPassword) {
+                    statusDiv.innerHTML = `<p style="color:red;">Passwords do not match.</p>`;
+                    return;
+                }
+                statusDiv.innerHTML = `<p style="color:blue;">Registering...</p>`;
+                this.services.auth.createUserWithEmailAndPassword(email, password)
+                    .then(userCredential => {
+                        statusDiv.innerHTML = `<p style="color:green;">Registration successful! Please login.</p>`;
+                        this.isNewUser = true;
+                        this.updateUserCountInDB();
+                        // On desktop, switch back to the sign-in panel
+                        if(window.innerWidth > 768) {
+                           setTimeout(() => document.getElementById('signIn').click(), 1500);
+                        }
+                    })
+                    .catch(error => {
+                        statusDiv.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+                    });
+            },
+
+            loginUser: function() {
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                const statusDiv = document.getElementById('login-status');
+                 statusDiv.style.display = 'block'; // Show status div
+
+                if (!email || !password) {
+                    statusDiv.innerHTML = `<p style="color:red;">Please enter both email and password.</p>`;
+                    return;
+                }
+                statusDiv.innerHTML = `<p style="color:blue;">Logging in...</p>`;
+                this.services.auth.signInWithEmailAndPassword(email, password)
+                    .catch(error => {
+                        statusDiv.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+                    });
+            },
+
+
+            logoutUser: function() {
+                this.services.auth.signOut().catch(error => console.error('Sign out error', error));
+            },
+
+            animateCounter: function(element, start, end, duration) {
+                let startTimestamp = null;
+                const step = (timestamp) => {
+                    if (!startTimestamp) startTimestamp = timestamp;
+                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                    const currentNumber = Math.floor(progress * (end - start) + start);
+                    element.innerHTML = currentNumber.toLocaleString();
+                    if (progress < 1) {
+                        window.requestAnimationFrame(step);
+                    } else {
+                        element.innerHTML = end.toLocaleString() + (element.id === 'features-counter' || element.id === 'goals-counter' ? '+' : '');
+                    }
+                };
+                window.requestAnimationFrame(step);
+            },
+
+            triggerCounters: async function() {
+                const userCountFromDB = 56;
+                let finalUserCount = userCountFromDB;
+                if (this.isNewUser) {
+                    finalUserCount++;
+                    this.isNewUser = false;
+                }
+                this.animateCounter(document.getElementById('users-counter'), 1, finalUserCount, 2000);
+                this.animateCounter(document.getElementById('features-counter'), 0, 7, 1500);
+                this.animateCounter(document.getElementById('goals-counter'), 0, 20, 1800);
+            },
+
+            updateUserCountInDB: function() {
+                console.log("Simulating: Updating user count in the database.");
+            },
+
+            getNews: async function() {
+                const newsGrid = document.getElementById('news-grid');
+                const newsLoader = document.getElementById('news-loader');
+                newsGrid.innerHTML = '';
+                newsLoader.style.display = 'none'; // Loader is now handled by showSection
+
+                try {
+                    const response = await fetch(`${this.API_BASE_URL}/agri-news`);
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    if (data.articles && data.articles.length > 0) {
+                        data.articles.forEach(article => {
+                            newsGrid.innerHTML += `
+                                <a href="#" onclick="event.preventDefault(); App.openNewsModal('${article.url}')" class="news-card">
+                                    <img src="${article.urlToImage || 'https://images.unsplash.com/photo-1586348943529-beaae6c28db9?auto=format&fit=crop&q=80&w=1915&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'}" alt="News Image" class="news-card-img">
+                                    <div class="news-card-content">
+                                        <h3>${article.title}</h3>
+                                        <p>${article.description || "No description available."}</p>
+                                        <div class="news-card-footer">
+                                            <strong>${article.source.name}</strong> - ${new Date(article.publishedAt).toLocaleDateString()}
+                                        </div>
+                                    </div>
+                                </a>
+                            `;
+                        });
+                        this.newsLoaded = true;
+                    } else {
+                        newsGrid.innerHTML = '<p style="color: white; text-align: center; width: 100%; z-index: 5;">No agricultural news found.</p>';
+                    }
+                } catch (e) {
+                    console.error("Failed to fetch news:", e);
+                    newsGrid.innerHTML = `<p style='color: #ffcccc; text-align:center; width: 100%; z-index: 5;'>Error fetching news: ${e.message}.</p>`;
+                }
+            },
+
+            fetchSidebarWeather: function() {
+                const widget = document.getElementById('sidebar-weather-widget');
+                const iconEl = widget.querySelector('i');
+                const tempEl = document.getElementById('weather-temp');
+                const locationEl = document.getElementById('weather-location');
+                if (!("geolocation" in navigator)) {
+                    locationEl.textContent = 'Geolocation N/A';
+                    iconEl.className = 'fas fa-map-marker-slash';
+                    tempEl.style.display = 'none';
+                    return;
+                }
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    try {
+                        const { latitude, longitude } = position.coords;
+                        const response = await fetch(`${this.API_BASE_URL}/weather?lat=${latitude}&lon=${longitude}`);
+                        if (!response.ok) throw new Error('Weather service failed');
+                        const data = await response.json();
+                        tempEl.innerHTML = `${Math.round(data.temp)}°C`;
+                        locationEl.textContent = data.city;
+                        const condition = data.condition.toLowerCase();
+                        if (condition.includes('cloud')) iconEl.className = 'fas fa-cloud';
+                        else if (condition.includes('rain') || condition.includes('drizzle')) iconEl.className = 'fas fa-cloud-showers-heavy';
+                        else if (condition.includes('sun') || condition.includes('clear')) iconEl.className = 'fas fa-sun';
+                        else if (condition.includes('thunder')) iconEl.className = 'fas fa-bolt';
+                        else if (condition.includes('snow')) iconEl.className = 'fas fa-snowflake';
+                        else iconEl.className = 'fas fa-smog';
+                    } catch (error) {
+                        locationEl.textContent = 'Weather unavailable';
+                        iconEl.className = 'fas fa-exclamation-circle';
+                        tempEl.style.display = 'none';
+                    }
+                }, () => {
+                    locationEl.textContent = 'Enable Location';
+                    iconEl.className = 'fas fa-map-marker-slash';
+                    tempEl.style.display = 'none';
+                });
+            },
+
+            // ADD ALL OF THESE FUNCTIONS INSIDE THE App OBJECT
+
+predictDiseaseFromFile: async function(form) {
+    const resultDiv = document.getElementById('disease-result');
+    resultDiv.innerHTML = '<p>Analyzing file...</p>';
+    this.showLoadingOverlay(true);
+    try {
+        const response = await fetch(`${this.API_BASE_URL}/predict_upload`, {
+            method: 'POST',
+            body: new FormData(form)
+        });
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error || 'Prediction from file failed.');
+        }
+        const data = await response.json();
+        this.displayPredictionResult(data);
+    } catch (e) {
+        resultDiv.innerHTML = `<p style="color:red;">Error: ${e.message}</p>`;
+    } finally {
+        this.showLoadingOverlay(false);
+    }
+},
+
+toggleCamera: function() {
+    const videoStreamEl = document.getElementById('video-stream');
+    const videoContainer = document.getElementById('video-container');
+    const cameraBtn = document.getElementById('camera-btn');
+    const resultDiv = document.getElementById('disease-result');
+
+    if (this.camera.isStreaming) {
+        this.camera.isStreaming = false;
+        clearInterval(this.camera.interval);
+        this.camera.interval = null;
+        videoStreamEl.src = '';
+        videoContainer.style.display = 'none';
+        cameraBtn.innerHTML = '<i class="fas fa-video"></i> Start Camera';
+        cameraBtn.style.backgroundColor = 'var(--primary-color)';
+        resultDiv.innerHTML = 'Select an option to begin.';
+        fetch(`${this.API_BASE_URL}/stop_video`, { method: 'POST' });
+    } else {
+        this.camera.isStreaming = true;
+        videoContainer.style.display = 'block';
+        videoStreamEl.src = `${this.API_BASE_URL}/video_feed`;
+        cameraBtn.innerHTML = '<i class="fas fa-video-slash"></i> Stop Camera';
+        cameraBtn.style.backgroundColor = '#e74c3c';
+        resultDiv.innerHTML = '<p>Point camera at a leaf... Analyzing automatically.</p>';
+        
+        this.camera.interval = setInterval(() => this.captureAndPredict(), 4000);
+    }
+},
+
+captureAndPredict: async function() {
+    if (!this.camera.isStreaming) return;
+    const videoEl = document.getElementById('video-stream');
+    const canvas = document.createElement('canvas');
+    if (videoEl.clientWidth === 0 || videoEl.clientHeight === 0) return;
+    
+    canvas.width = videoEl.clientWidth;
+    canvas.height = videoEl.clientHeight;
+    canvas.getContext('2d').drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+    const base64Image = canvas.toDataURL('image/jpeg', 0.8);
+
+    try {
+        const response = await fetch(`${this.API_BASE_URL}/predict_frame`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ image: base64Image })
+        });
+        if (!response.ok) return;
+        const data = await response.json();
+        this.displayPredictionResult(data);
+    } catch (e) { console.error("Frame prediction error:", e); }
+},
+
+displayPredictionResult: function(data) {
+    const resultDiv = document.getElementById('disease-result');
+    if (data.error) {
+        resultDiv.innerHTML = `<p style="color:red;">Error: ${data.error}</p>`;
+        return;
+    }
+    const recommendations = data.recommendations;
+    let recommendationHTML = '<p>No specific cures provided.</p>';
+    if (recommendations && Array.isArray(recommendations) && recommendations.length > 0) {
+        recommendationHTML = '<strong>Recommendations:</strong><ol style="text-align: left; padding-left: 20px; margin-top: 10px;">';
+        recommendations.forEach(cure => {
+            recommendationHTML += `<li>${cure}</li>`;
+        });
+        recommendationHTML += '</ol>';
+    }
+    resultDiv.innerHTML = `<strong>Result:</strong> ${data.disease} <br>${recommendationHTML}`;
+},
+
+            getWeatherByLocation: function() {
+                const outputDiv = document.getElementById('weather-output');
+                if ("geolocation" in navigator) {
+                    this.showLoadingOverlay(true);
+                    navigator.geolocation.getCurrentPosition(async (position) => {
+                        const { latitude, longitude } = position.coords;
+                        this.fetchWeather({ lat: latitude, lon: longitude });
+                    }, () => {
+                        outputDiv.innerHTML = "<p style='color:red;'>Could not get your location. Please enable location services.</p>";
+                        this.showLoadingOverlay(false);
+                    });
+                } else {
+                    outputDiv.innerHTML = "<p style='color:red;'>Geolocation is not supported by your browser.</p>";
+                }
+            },
+
+            getWeatherByCity: function() {
+                const city = document.getElementById('city-search-input').value;
+                if (!city) {
+                    document.getElementById('weather-output').innerHTML = "<p style='color:red;'>Please enter a city name.</p>";
+                    return;
+                }
+                this.showLoadingOverlay(true);
+                this.fetchWeather({ city: city });
+            },
+
+            fetchWeather: async function(params) {
+                const outputDiv = document.getElementById('weather-output');
+                let queryString = '';
+                if (params.lat && params.lon) {
+                    queryString = `lat=${params.lat}&lon=${params.lon}`;
+                } else if (params.city) {
+                    queryString = `city=${encodeURIComponent(params.city)}`;
+                } else {
+                    this.showLoadingOverlay(false);
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`${this.API_BASE_URL}/weather?${queryString}`);
+                    if (!response.ok) {
+                         const errorData = await response.json();
+                         throw new Error(errorData.error || 'Could not fetch weather data.');
+                    }
+                    const data = await response.json();
+                   
+                    const iconClass = this.getWeatherIconClass(data.condition);
+
+                    outputDiv.innerHTML = `
+                        <div class="weather-main-display">
+                             <i class="fas ${iconClass} weather-icon-large"></i>
+                             <div class="weather-details">
+                                 <span class="weather-city">${data.city}</span>
+                                 <span class="weather-temp">${Math.round(data.temp)}°C</span>
+                                 <span class="weather-condition">${data.condition}</span>
+                             </div>
+                        </div>`;
+                   
+                    this.displayNearbyWeather(data.lat, data.lon, data.city);
+
+                } catch (e) {
+                    outputDiv.innerHTML = `<p style="color:red;">Error: ${e.message}</p>`;
+                    document.getElementById('nearby-weather-container').style.display = 'none';
+                } finally {
+                    this.showLoadingOverlay(false);
+                }
+            },
+           
+            displayNearbyWeather: async function(lat, lon, mainCity) {
+                const nearbyContainer = document.getElementById('nearby-weather-container');
+                const nearbyList = document.getElementById('nearby-weather-list');
+               
+                try {
+                    const response = await fetch(`${this.API_BASE_URL}/nearby-weather?lat=${lat}&lon=${lon}`);
+                    const nearbyData = await response.json();
+                   
+                    nearbyList.innerHTML = ''; 
+                   
+                    const filteredCities = nearbyData.filter(city => city.city.toLowerCase() !== mainCity.toLowerCase());
+
+                    if(filteredCities.length > 0) {
+                        filteredCities.forEach(data => {
+                            const iconClass = this.getWeatherIconClass(data.condition);
+                            nearbyList.innerHTML += `
+                                <div class="nearby-weather-card">
+                                    <span class="nearby-city">${data.city}</span>
+                                    <i class="fas ${iconClass}"></i>
+                                    <span class="nearby-temp">${Math.round(data.temp)}°C</span>
+                                </div>`;
+                        });
+                        nearbyContainer.style.display = 'block';
+                    } else {
+                        nearbyContainer.style.display = 'none';
+                    }
+                } catch (e) {
+                    console.error("Could not fetch nearby weather:", e);
+                    nearbyContainer.style.display = 'none';
+                }
+            },
+
+            getWeatherIconClass: function(condition) {
+                if (!condition) return 'fa-question-circle';
+                const lowerCaseCondition = condition.toLowerCase();
+                if (lowerCaseCondition.includes('rain') || lowerCaseCondition.includes('drizzle')) return 'fa-cloud-showers-heavy';
+                if (lowerCaseCondition.includes('cloud')) return 'fa-cloud';
+                if (lowerCaseCondition.includes('sun') || lowerCaseCondition.includes('clear')) return 'fa-sun';
+                if (lowerCaseCondition.includes('thunder')) return 'fa-bolt';
+                if (lowerCaseCondition.includes('snow')) return 'fa-snowflake';
+                if (lowerCaseCondition.includes('mist') || lowerCaseCondition.includes('haze') || lowerCaseCondition.includes('fog')) return 'fa-smog';
+                return 'fa-cloud-sun';
+            },
+
+            getPrices: async function() {
+                const veg = document.getElementById('veg-name').value;
+                const location = document.getElementById('veg-location').value;
+                const priceList = document.getElementById('price-list');
+                if (!veg || !location) {
+                    priceList.innerHTML = "<p style='color: red;'>Please enter both Vegetable Name and Market/City.</p>";
+                    return;
+                }
+                this.showLoadingOverlay(true);
+                try {
+                    const response = await fetch(`${this.API_BASE_URL}/prices?vegetable=${encodeURIComponent(veg)}&location=${encodeURIComponent(location)}`);
+                    if (!response.ok) throw new Error('Failed to fetch prices.');
+                    const data = await response.json();
+                    if (data.prices && data.prices.length > 0) {
+                        const priceInfo = data.prices[0];
+                        priceList.innerHTML = `<li><strong>${priceInfo.name} (${priceInfo.location} Market):</strong> ₹${priceInfo.price === 'N/A' ? 'Not Available' : `${priceInfo.price} per kg`}</li>`;
+                    } else {
+                        priceList.innerHTML = `<p>No price data found for <strong>${veg}</strong> in <strong>${location}</strong>.</p>`;
+                    }
+                } catch (error) {
+                    priceList.innerHTML = `<p style='color: red;'>Error fetching price: ${error.message}.</p>`;
+                } finally {
+                    this.showLoadingOverlay(false);
+                }
+            },
+
+            getPlan: async function() {
+                const outputDiv = document.getElementById('planner-output');
+                const crop = document.getElementById('crop').value;
+                const area = document.getElementById('area').value;
+                const season = document.getElementById('season').value;
+                if (!crop || !area || !season) {
+                    outputDiv.innerHTML = "<p style='color: red;'>Please fill in all fields.</p>";
+                    return;
+                }
+                this.showLoadingOverlay(true);
+                try {
+                    const response = await fetch(`${this.API_BASE_URL}/planner?crop=${encodeURIComponent(crop)}&area=${encodeURIComponent(area)}&season=${encodeURIComponent(season)}`);
+                    if (!response.ok) {
+                        const err = await response.json();
+                        throw new Error(err.error || 'Failed to generate plan.');
+                    }
+                    const data = await response.json();
+                    outputDiv.innerHTML = `<strong>Suggestion:</strong> ${data.suggestion}<br><strong>Estimated Cost:</strong> ${data.estimated_cost}<br><strong>Tips:</strong> ${data.tips}`;
+                } catch (e) {
+                    outputDiv.innerHTML = `<p style='color: red;'>Error: ${e.message}</p>`;
+                } finally {
+                    this.showLoadingOverlay(false);
+                }
+            },
+
+            showSellerForm: function() {
+                document.getElementById('buysell-choice-wrapper').style.display = 'none';
+                document.getElementById('seller-form-container').style.display = 'block';
+            },
+
+            showBuysellChoice: function() {
+                document.getElementById('seller-form-container').style.display = 'none';
+                document.getElementById('buysell-choice-wrapper').style.display = 'flex';
+            },
+
+            redirectToBuyerPage: function() {
+                window.location.href = '/buyer';
+            },
+
+            submitSellerItem: async function() {
+                const sellerName = document.getElementById('seller-name').value;
+                const itemName = document.getElementById('seller-item-name').value;
+                const price = document.getElementById('seller-price').value;
+                const imageFile = document.getElementById('seller-item-image').files[0];
+                const location = document.getElementById('seller-location').value;
+                const category = document.getElementById('seller-category').value;
+                const statusDiv = document.getElementById('seller-submit-status');
+                const loadingOverlay = document.getElementById('loading-overlay');
+                if (!sellerName || !itemName || !price || !imageFile || !location || !category) {
+                    statusDiv.innerHTML = '<p style="color:red;">Please fill all fields, select a category, and upload an image.</p>';
+                    return;
+                }
+                loadingOverlay.style.display = 'flex';
+                statusDiv.innerHTML = '<p style="color:blue;">Uploading product image...</p>';
+                try {
+                    const formData = new FormData();
+                    formData.append('item_image', imageFile);
+                    const imageUploadResponse = await fetch(`${this.API_BASE_URL}/upload-item-image`, { method: 'POST', body: formData });
+                    if (!imageUploadResponse.ok) throw new Error('Image upload failed.');
+                    const imageUploadResult = await imageUploadResponse.json();
+                    const imageUrl = imageUploadResult.imageUrl;
+                    statusDiv.innerHTML = '<p style="color:blue;">Image uploaded. Saving details...</p>';
+                    const itemData = { sellerName, itemName, itemPrice: parseFloat(price), itemImageUrl: imageUrl, sellerLocation: location, category };
+                    const addItemResponse = await fetch(`${this.API_BASE_URL}/add-item`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(itemData) });
+                    if (!addItemResponse.ok) throw new Error('Failed to save item details.');
+                    const addItemResult = await addItemResponse.json();
+                    statusDiv.innerHTML = `<p style="color:green;">${addItemResult.message}</p>`;
+                    document.getElementById('seller-name').value = '';
+                    document.getElementById('seller-item-name').value = '';
+                    document.getElementById('seller-price').value = '';
+                    document.getElementById('seller-item-image').value = '';
+                    document.getElementById('seller-location').value = '';
+                    document.getElementById('seller-category').value = '';
+                } catch (error) {
+                    statusDiv.innerHTML = `<p style="color:red;">An error occurred: ${error.message}</p>`;
+                } finally {
+                    loadingOverlay.style.display = 'none';
+                }
+            },
+
+            openNewsModal: function(url) {
+                if (url.includes("youtube.com/watch")) {
+                    const modal = document.getElementById('news-modal');
+                    const iframe = document.getElementById('news-iframe');
+                    const videoId = url.split('v=')[1].split('&')[0];
+                    const embedUrl = `https://www.youtube.com/embed/$${videoId}?autoplay=1`;
+                    iframe.src = embedUrl;
+                    modal.style.display = 'flex';
+                } else {
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                }
+            },
+
+            closeNewsModal: function() {
+                const modal = document.getElementById('news-modal');
+                const iframe = document.getElementById('news-iframe');
+                modal.style.display = 'none';
+                iframe.src = '';
+            },
+
+            initDashboardSlider: function() {
+                // This is a placeholder for your slider logic
+            },
+
+            showLoadingOverlay: function(show) {
+                const loadingOverlay = document.getElementById('loading-overlay');
+                loadingOverlay.style.display = show ? 'flex' : 'none';
+            }
+        };
+
+        App.init();
+    </script>
+</body>
+</html>
